@@ -1,0 +1,8 @@
+{
+  "git.ignoreLimitWarning": true,
+  "css.validate": false,
+  "tailwindCSS.experimental.classRegex": [
+    ["className\\s*=\\s*\"([^\"]*)\"", 1],
+    ["className:\\s*'([^']*)'", 1]
+  ]
+}
