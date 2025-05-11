@@ -1,8 +1,12 @@
+// routes/roomRoutes.js
 const express = require('express');
 const router = express.Router();
-const { getRooms, addRoom } = require('../controllers/roomController'); // Ensure these functions exist
+const {
+  getAllRooms,
+  createRoom
+} = require('../controllers/roomController'); // ✅ Correct names now
 
-router.get('/', getRooms);  // ✅ handler is a function
-router.post('/', addRoom);  // ✅ handler is a function
+router.get('/', getAllRooms);  // ✅ Works now
+router.post('/', createRoom);  // ✅ Works now
 
 module.exports = router;
