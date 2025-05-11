@@ -2,15 +2,13 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
-// @desc Register new user
 const register = async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, username } = req.body;
 
   try {
-    // Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: '❌ Email is already registered' });
     }
 
     // Hash password
@@ -20,70 +18,47 @@ const register = async (req, res) => {
     // Create user
     const user = await User.create({
       name,
+      username,
       email,
       password: hashedPassword,
       role
     });
 
-    // Generate JWT token
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
-    // Respond with user data and token
     res.status(201).json({
       token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
+        username: user.username,
         role: user.role
       }
     });
-
   } catch (error) {
+    // Handle duplicate key (e.g., username/email)
+    if (error.code === 11000) {
+      const duplicateField = Object.keys(error.keyPattern)[0];
+      return res.status(400).json({
+        message: `❌ Duplicate value for '${duplicateField}' — must be unique`
+      });
+    }
+
+    // Handle Mongoose validation errors
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        message: `❌ Validation error`,
+        details: messages
+      });
+    }
+
     console.error('🚨 Registration error:', error.message || error);
-    res.status(500).json({ message: 'Server error during registration' });
+    res.status(500).json({ message: '🚨 Server error during registration' });
   }
 };
-
-// @desc Login user
-const login = async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
-
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
-    });
-
-  } catch (error) {
-    console.error('🚨 Login error:', error.message || error);
-    res.status(500).json({ message: 'Server error during login' });
-  }
-};
-
-module.exports = { register, login };
