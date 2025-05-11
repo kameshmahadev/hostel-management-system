@@ -1,17 +1,13 @@
 const express = require('express');
+const { getRooms, addRoom } = require('../controllers/roomController');
+const { protect, adminOnly } = require('../middleware/authMiddleware');
+
 const router = express.Router();
-const {
-  getAllRooms,
-  createRoom,
-  updateRoom,
-  deleteRoom,
-} = require('../controllers/roomController');
 
-const { protect, authorizeRoles } = require('../middleware/authMiddleware');
+// Public route (no authentication needed)
+router.get('/', getRooms);
 
-router.get('/', protect, getAllRooms);
-router.post('/', protect, authorizeRoles('admin'), createRoom);
-router.put('/:id', protect, authorizeRoles('admin'), updateRoom);
-router.delete('/:id', protect, authorizeRoles('admin'), deleteRoom);
+// Admin only route (authentication + authorization needed)
+router.post('/', protect, adminOnly, addRoom);
 
 module.exports = router;
