@@ -1,27 +1,44 @@
+// backend/middleware/authMiddleware.js
+
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
-const protect = (req, res, next) => {
-  const token = req.header('Authorization')?.split(' ')[1]; // Extract token from "Authorization" header
-  if (!token) return res.status(401).json({ message: 'No token, authorization denied' });
+// Middleware to check if the user is authenticated
+const protect = async (req, res, next) => {
+  let token;
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    try {
+      token = req.headers.authorization.split(' ')[1];
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.id).select('-password');
+      next();
+    } catch (error) {
+      return res.status(401).json({ message: 'Not authorized, token failed' });
+    }
+  }
+
+  if (!token) {
+    return res.status(401).json({ message: 'Not authorized, no token' });
+  }
+};
+
+// ✅ Middleware to restrict by role
+const authorizeRoles = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied: insufficient permissions' });
+    }
     next();
-  } catch (error) {
-    res.status(401).json({ message: 'Token is not valid' });
-  }
+  };
 };
 
-// Middleware to check if the user is an admin
-const adminOnly = (req, res, next) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Access denied' });
-  }
-  next();
-};
-
+// ✅ Export both
 module.exports = {
   protect,
-  adminOnly,
+  authorizeRoles
 };
