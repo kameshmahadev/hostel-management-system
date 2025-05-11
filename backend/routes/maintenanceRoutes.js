@@ -1,20 +1,21 @@
+// backend/routes/maintenanceRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const {
-  getAllBills,
-  createBill,
-  updateBill,
-  deleteBill
-} = require('../controllers/billController');
+  createRequest,
+  getAllRequests,
+  getRequestById,
+  updateRequest,
+  deleteRequest,
+} = require('../controllers/maintenanceController');
+const { protect } = require('../middleware/authMiddleware');
 
-const { protect, authorizeRoles } = require('../middleware/authMiddleware');
-
-router.route('/')
-  .get(protect, getAllBills)
-  .post(protect, authorizeRoles('admin'), createBill);
-
-router.route('/:id')
-  .put(protect, authorizeRoles('admin'), updateBill)
-  .delete(protect, authorizeRoles('admin'), deleteBill);
+// Routes
+router.post('/', protect, createRequest);
+router.get('/', protect, getAllRequests);
+router.get('/:id', protect, getRequestById);
+router.put('/:id', protect, updateRequest);
+router.delete('/:id', protect, deleteRequest);
 
 module.exports = router;
