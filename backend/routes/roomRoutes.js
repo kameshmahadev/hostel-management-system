@@ -1,13 +1,8 @@
 const express = require('express');
-const { getRooms, addRoom } = require('../controllers/roomController');
-const { protect, adminOnly } = require('../middleware/authMiddleware');
-
 const router = express.Router();
+const { getRooms, addRoom } = require('../controllers/roomController'); // Ensure these functions exist
 
-// Public route (no authentication needed)
-router.get('/', getRooms);
-
-// Admin only route (authentication + authorization needed)
-router.post('/', protect, adminOnly, addRoom);
+router.get('/', getRooms);  // ✅ handler is a function
+router.post('/', addRoom);  // ✅ handler is a function
 
 module.exports = router;

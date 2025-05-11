@@ -26,7 +26,7 @@ try {
   app.use('/api/residents', require('./routes/residentRoutes'));
   app.use('/api/bookings', require('./routes/bookingRoutes'));
   app.use('/api/maintenance', require('./routes/maintenanceRoutes'));
-  app.use('/api/bills', require('./routes/billRoutes'));
+  app.use('/api/bills', require('./routes/billingRoutes'));
   app.use('/api/users', require('./routes/userRoutes'));
   app.use('/api/auth', require('./routes/authRoutes')); // 👈 Added Auth Routes
 } catch (err) {
