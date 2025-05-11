@@ -1,34 +1,19 @@
 // backend/server.js
-const express = require("express");
-const cors = require("cors");
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-
-dotenv.config();
+const express = require('express');
+const cors = require('cors');
 const app = express();
+const PORT = 5000;
 
-// Middleware
-app.use(express.json());
+// Middlewares
 app.use(cors());
-
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => console.log("Connected to MongoDB"))
-  .catch(err => console.log(err));
+app.use(express.json());
 
 // Routes
-const roomRoutes = require("./routes/roomRoutes");
-const residentRoutes = require("./routes/residentRoutes");
-const maintenanceRoutes = require("./routes/maintenanceRoutes");
-const invoiceRoutes = require("./routes/invoiceRoutes");
+app.use('/api/rooms', require('./routes/roomRoutes'));
+app.use('/api/residents', require('./routes/residentRoutes'));
+app.use('/api/bookings', require('./routes/bookingRoutes'));
+app.use('/api/billing', require('./routes/billingRoutes'));
 
-app.use("/api/rooms", roomRoutes);
-app.use("/api/residents", residentRoutes);
-app.use("/api/maintenance", maintenanceRoutes);
-app.use("/api/invoices", invoiceRoutes);
-
-app.listen(5000, () => {
-  console.log("Server is running on port 5000");
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
