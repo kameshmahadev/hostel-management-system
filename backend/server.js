@@ -1,43 +1,36 @@
+// server.js
+
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
 const dotenv = require('dotenv');
-const path = require('path');
-
-dotenv.config();
+dotenv.config(); // Load .env variables
 
 const app = express();
+const port = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
+// Middleware to parse incoming JSON
 app.use(express.json());
 
-// MongoDB Connection
+// Connect to MongoDB (deprecation warnings removed)
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connected'))
-  .catch((err) => {
-    console.error('❌ MongoDB connection error:', err.message);
-    process.exit(1);
-  });
+  .catch((err) => console.error('❌ MongoDB connection error:', err));
 
-// Routes
-try {
-  app.use('/api/rooms', require('./routes/roomRoutes'));
-  app.use('/api/residents', require('./routes/residentRoutes'));
-  app.use('/api/bookings', require('./routes/bookingRoutes'));
-  app.use('/api/maintenance', require('./routes/maintenanceRoutes'));
-  app.use('/api/bills', require('./routes/billingRoutes'));
-  app.use('/api/users', require('./routes/userRoutes'));
-  app.use('/api/auth', require('./routes/authRoutes')); // 👈 Added Auth Routes
-} catch (err) {
-  console.error('❌ Route error:', err.message);
-}
+// Import routes
+const userRoutes = require('./routes/userRoutes');
+const roomRoutes = require('./routes/roomRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
+const maintenanceRoutes = require('./routes/maintenanceRoutes');
+const billRoutes = require('./routes/billRoutes');
 
-// Root test route
-app.get('/', (req, res) => {
-  res.send('🏠 Hostel Management Backend is Running');
-});
+// Use routes
+app.use('/api/users', userRoutes);
+app.use('/api/rooms', roomRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/bills', billRoutes);
 
 // Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(port, () => {
+  console.log(`🚀 Server running on port ${port}`);
+});
