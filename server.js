@@ -16,7 +16,10 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(helmet());
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(cors({
+  origin: 'http://localhost:3000', // or your frontend URL in production
+  credentials: true
+}));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
