@@ -17,7 +17,10 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.use(helmet());
 app.use(cors({
-  origin: 'http://localhost:3000', // or your frontend URL in production
+  origin: [
+    'http://localhost:3000',
+    'https://your-frontend-domain.onrender.com' // <-- replace with your deployed frontend URL
+  ],
   credentials: true
 }));
 
