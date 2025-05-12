@@ -2,20 +2,15 @@
 
 const express = require('express');
 const router = express.Router();
-const {
-  createRequest,
-  getAllRequests,
-  getRequestById,
-  updateRequest,
-  deleteRequest,
-} = require('../controllers/maintenanceController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, authorizeRoles } = require('../middleware/authMiddleware');
+const { createMaintenance, getAllMaintenance, updateMaintenance, deleteMaintenance } = require('../controllers/maintenanceController');
 
-// Routes
-router.post('/', protect, createRequest);
-router.get('/', protect, getAllRequests);
-router.get('/:id', protect, getRequestById);
-router.put('/:id', protect, updateRequest);
-router.delete('/:id', protect, deleteRequest);
+router.route('/')
+  .get(protect, authorizeRoles('admin'), getAllMaintenance)
+  .post(protect, authorizeRoles('admin', 'user'), createMaintenance);
+
+router.route('/:id')
+  .put(protect, authorizeRoles('admin'), updateMaintenance)
+  .delete(protect, authorizeRoles('admin'), deleteMaintenance);
 
 module.exports = router;

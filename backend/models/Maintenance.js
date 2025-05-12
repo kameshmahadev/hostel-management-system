@@ -1,12 +1,10 @@
 const mongoose = require('mongoose');
 
 const maintenanceSchema = new mongoose.Schema({
-  room: { type: mongoose.Schema.Types.ObjectId, ref: 'Room' },
-  description: String,
-  priority: { type: String, enum: ['Low', 'Medium', 'High'], default: 'Low' },
-  status: { type: String, enum: ['Open', 'In Progress', 'Closed'], default: 'Open' },
-  requestedAt: { type: Date, default: Date.now },
-  updatedAt: Date
+  room: { type: mongoose.Schema.Types.ObjectId, ref: 'Room', required: true },
+  description: { type: String, required: true },
+  status: { type: String, enum: ['Pending', 'Resolved'], default: 'Pending' },
+  createdAt: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model('Maintenance', maintenanceSchema);

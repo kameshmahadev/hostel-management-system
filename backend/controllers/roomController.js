@@ -11,8 +11,22 @@ exports.createRoom = async (req, res) => {
 };
 
 exports.updateRoom = async (req, res) => {
-  const updatedRoom = await Room.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(updatedRoom);
+  try {
+    const { id } = req.params; // Extract room ID from the request parameters
+    const updates = req.body; // Extract updates from the request body
+
+    // Find the room by ID and update it
+    const room = await Room.findByIdAndUpdate(id, updates, { new: true });
+
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    res.status(200).json(room);
+  } catch (error) {
+    console.error('❌ Room Update Error:', error.message);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
 };
 
 exports.deleteRoom = async (req, res) => {

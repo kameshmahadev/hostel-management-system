@@ -14,7 +14,7 @@ router.route('/')
   .post(protect, authorizeRoles('admin', 'staff'), createBooking);
 
 router.route('/:id')
-  .put(protect, authorizeRoles('admin', 'staff'), updateBooking)
+  .put(protect, authorizeRoles('admin'), updateBooking)
   .delete(protect, authorizeRoles('admin'), deleteBooking);
 
 module.exports = router;

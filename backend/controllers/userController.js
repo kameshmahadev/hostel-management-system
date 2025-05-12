@@ -2,6 +2,12 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
+const generateToken = (id, role) => {
+  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
+    expiresIn: '7d', // Token will now expire in 7 days
+  });
+};
+
 const register = async (req, res) => {
   const { name, email, password, role, username } = req.body;
 
@@ -24,11 +30,7 @@ const register = async (req, res) => {
       role
     });
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
+    const token = generateToken(user._id, user.role);
 
     res.status(201).json({
       token,
@@ -62,3 +64,41 @@ const register = async (req, res) => {
     res.status(500).json({ message: '🚨 Server error during registration' });
   }
 };
+
+const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Check if the user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ message: '❌ Invalid email or password' });
+    }
+
+    // Check if the password matches
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      return res.status(401).json({ message: '❌ Invalid email or password' });
+    }
+
+    // Generate a token
+    const token = generateToken(user._id, user.role);
+
+    // Return the token and user details
+    res.status(200).json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('🚨 Login error:', error.message || error);
+    res.status(500).json({ message: '🚨 Server error during login' });
+  }
+};
+
+module.exports = { register, login };
