@@ -1,6 +1,7 @@
 // backend/controllers/maintenanceController.js
 
 const Maintenance = require('../models/Maintenance');
+const Resident = require('../models/Resident');
 
 exports.createMaintenance = async (req, res) => {
   const maintenance = await Maintenance.create(req.body);
@@ -21,4 +22,20 @@ exports.updateMaintenance = async (req, res) => {
 exports.deleteMaintenance = async (req, res) => {
   await Maintenance.findByIdAndDelete(req.params.id);
   res.json({ message: 'Maintenance deleted' });
+};
+
+exports.getAllResidents = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const residents = await Resident.find().skip(skip).limit(limit);
+  const total = await Resident.countDocuments();
+
+  res.json({
+    total,
+    page,
+    pages: Math.ceil(total / limit),
+    residents
+  });
 };

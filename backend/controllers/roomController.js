@@ -1,4 +1,5 @@
 const Room = require('../models/Room');
+const Resident = require('../models/Resident');
 
 exports.getAllRooms = async (req, res) => {
   const rooms = await Room.find();
@@ -32,4 +33,20 @@ exports.updateRoom = async (req, res) => {
 exports.deleteRoom = async (req, res) => {
   await Room.findByIdAndDelete(req.params.id);
   res.json({ message: 'Room deleted' });
+};
+
+exports.getAllResidents = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const residents = await Resident.find().skip(skip).limit(limit);
+  const total = await Resident.countDocuments();
+
+  res.json({
+    total,
+    page,
+    pages: Math.ceil(total / limit),
+    residents
+  });
 };

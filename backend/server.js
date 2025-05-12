@@ -3,13 +3,20 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-dotenv.config(); // Load .env variables
+const morgan = require('morgan');
+const helmet = require('helmet');
+const cors = require('cors');
+
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Middleware to parse incoming JSON
+// Middleware
 app.use(express.json());
+app.use(morgan('dev'));
+app.use(helmet());
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -22,15 +29,15 @@ const roomRoutes = require('./routes/roomRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const maintenanceRoutes = require('./routes/maintenanceRoutes');
 const billRoutes = require('./routes/billRoutes');
-const residentRoutes = require('./routes/residentRoutes'); // ✅ Added
+const residentRoutes = require('./routes/residentRoutes');
 
 // Use routes
 app.use('/api/users', userRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/bookings', bookingRoutes);
-app.use('/api/maintenance', require('./routes/maintenanceRoutes'));
-app.use('/api/bills', require('./routes/billRoutes'));
-app.use('/api/residents', residentRoutes); // ✅ Mounted resident routes
+app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/bills', billRoutes);
+app.use('/api/residents', residentRoutes);
 
 // Start server
 app.listen(port, () => {

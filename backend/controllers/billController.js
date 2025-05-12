@@ -1,6 +1,7 @@
 // backend/controllers/billController.js
 
 const Bill = require('../models/Bill');
+const Resident = require('../models/Resident');
 
 // Create new bill
 exports.createBill = async (req, res) => {
@@ -38,10 +39,28 @@ exports.deleteBill = async (req, res) => {
   res.json({ message: 'Bill deleted' });
 };
 
+// Get all residents with pagination
+exports.getAllResidents = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const residents = await Resident.find().skip(skip).limit(limit);
+  const total = await Resident.countDocuments();
+
+  res.json({
+    total,
+    page,
+    pages: Math.ceil(total / limit),
+    residents
+  });
+};
+
 module.exports = {
   createBill: exports.createBill,
   getAllBills: exports.getAllBills,
   getBillById,
   updateBill: exports.updateBill,
   deleteBill: exports.deleteBill,
+  getAllResidents: exports.getAllResidents,
 };
