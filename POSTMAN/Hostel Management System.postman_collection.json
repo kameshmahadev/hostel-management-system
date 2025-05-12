@@ -1,0 +1,18 @@
+{
+	"info": {
+		"_postman_id": "2f163195-5949-4485-8c1d-c7002f5006ed",
+		"name": "Hostel Management System",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "44656162"
+	},
+	"item": [
+		{
+			"name": "New Request",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}
