@@ -19,7 +19,7 @@ app.use(helmet());
 app.use(cors({
   origin: [
     'http://localhost:3000',
-    'https://your-frontend-domain.onrender.com' // <-- replace with your deployed frontend URL
+    'https://hostel-management-system-tooc.onrender.com'
   ],
   credentials: true
 }));
