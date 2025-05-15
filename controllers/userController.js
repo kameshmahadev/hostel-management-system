@@ -65,7 +65,41 @@ const register = async (req, res) => {
   }
 };
 
-const login = async (req, res) => { ... }
+const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Check if the user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ message: '❌ Invalid email or password' });
+    }
+
+    // Check if the password matches
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      return res.status(401).json({ message: '❌ Invalid email or password' });
+    }
+
+    // Generate a token
+    const token = generateToken(user._id, user.role);
+
+    // Return the token and user details
+    res.status(200).json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('🚨 Login error:', error.message || error);
+    res.status(500).json({ message: '🚨 Server error during login' });
+  }
+};
 
 const createUser = async (req, res) => {
   try {
