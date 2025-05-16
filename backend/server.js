@@ -1,40 +1,37 @@
-// server.js
-
-import express from 'express';
-import dotenv from 'dotenv';
-import cors from 'cors';
-import connectDB from './config/db.js';
-import userRoutes from './routes/userRoutes.js';
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const mongoose = require('mongoose');
+const authRoutes = require('./routes/authRoutes'); // Adjust if needed
+const bookingRoutes = require('./routes/bookingRoutes'); // Adjust if needed
 
 dotenv.config();
-connectDB();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
 // Middleware
+app.use(cors());
 app.use(express.json());
 
-// CORS setup
-app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'https://hostel-backend-1ccr.onrender.com',
-    'https://passwordrstflw.netlify.app',
-    'https://your-hostel-frontend.netlify.app' // ✅ Add your actual frontend domain when deployed
-  ],
-  credentials: true
-}));
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/bookings', bookingRoutes);
 
-// Route setup
-app.use('/api/users', userRoutes);
-
-// Home route
+// Root Route
 app.get('/', (req, res) => {
-  res.send('API is running...');
+  res.send('Welcome to the Hostel Management API');
 });
 
-// Server listen
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// DB + Server start
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log('Connected to MongoDB');
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('MongoDB connection failed:', error.message);
+  });
