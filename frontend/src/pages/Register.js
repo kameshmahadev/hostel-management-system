@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "../services/api"; // Assuming you have axios configured in services/api.js
+import axios from "../services/api"; // Axios instance configured in api.js
 import { useNavigate } from "react-router-dom";
 
 const Register = () => {
@@ -20,10 +20,10 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("/api/users/register", formData);
+      const response = await axios.post("/users/register", formData); // Backend registration endpoint
       console.log(response.data);
-      alert("Registration successful!");
-      navigate("/login"); // Redirect to login page
+      alert("Registration successful! You can now log in.");
+      navigate("/login"); // Redirect to login page after successful registration
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong");
     }

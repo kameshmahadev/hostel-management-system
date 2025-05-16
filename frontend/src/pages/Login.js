@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "../services/api"; // Assuming you have axios configured in services/api.js
+import axios from "../services/api"; // Axios instance configured in api.js
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
@@ -14,11 +14,14 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("/api/users/login", formData);
-      console.log(response.data);
-      localStorage.setItem("token", response.data.token); // Save token
+      const response = await axios.post("/users/login", formData); // Backend login endpoint
+      const { token } = response.data;
+
+      // Save the token in localStorage
+      localStorage.setItem("token", token);
+
       alert("Login successful!");
-      navigate("/dashboard"); // Redirect to dashboard
+      navigate("/dashboard"); // Redirect to the dashboard
     } catch (err) {
       setError(err.response?.data?.message || "Invalid credentials");
     }
