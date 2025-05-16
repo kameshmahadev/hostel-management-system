@@ -1,9 +1,11 @@
-import axios from "axios";
+// src/api.js or wherever Axios is set up
+import axios from 'axios';
 
-// Configure Axios instance
-const api = axios.create({
-  baseURL: "https://hostel-management-system-tooc.onrender.com/api",
-  withCredentials: true,
+const API = axios.create({
+  baseURL: 'https://hostel-backend-1ccr.onrender.com', // <-- Update this
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-export default api;
+export default API;

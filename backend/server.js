@@ -19,7 +19,7 @@ app.use(helmet());
 app.use(cors({
   origin: [
     'http://localhost:3000',
-    'https://hostel-management-system-tooc.onrender.com'
+    'https://hostel-backend-1ccr.onrender.com'
   ],
   credentials: true
 }));
