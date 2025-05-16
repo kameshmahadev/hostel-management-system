@@ -1,51 +1,40 @@
 // server.js
 
-const express = require('express');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const morgan = require('morgan');
-const helmet = require('helmet');
-const cors = require('cors');
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import connectDB from './config/db.js';
+import userRoutes from './routes/userRoutes.js';
 
 dotenv.config();
+connectDB();
 
 const app = express();
-const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(express.json());
-app.use(morgan('dev'));
-app.use(helmet());
+
+// CORS setup
 app.use(cors({
   origin: [
     'http://localhost:3000',
-    'https://hostel-backend-1ccr.onrender.com'
+    'https://hostel-backend-1ccr.onrender.com',
+    'https://passwordrstflw.netlify.app',
+    'https://your-hostel-frontend.netlify.app' // ✅ Add your actual frontend domain when deployed
   ],
   credentials: true
 }));
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB connected'))
-  .catch((err) => console.error('❌ MongoDB connection error:', err));
-
-// Import routes
-const userRoutes = require('./routes/userRoutes');
-const roomRoutes = require('./routes/roomRoutes');
-const bookingRoutes = require('./routes/bookingRoutes');
-const maintenanceRoutes = require('./routes/maintenanceRoutes');
-const billRoutes = require('./routes/billRoutes');
-const residentRoutes = require('./routes/residentRoutes');
-
-// Use routes
+// Route setup
 app.use('/api/users', userRoutes);
-app.use('/api/rooms', roomRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/maintenance', maintenanceRoutes);
-app.use('/api/bills', billRoutes);
-app.use('/api/residents', residentRoutes);
 
-// Start server
-app.listen(port, () => {
-  console.log(`🚀 Server running on port ${port}`);
+// Home route
+app.get('/', (req, res) => {
+  res.send('API is running...');
+});
+
+// Server listen
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
