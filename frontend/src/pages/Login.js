@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import api from '../service/api';
-import { setToken } from '../service/auth'; // Import setToken
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -14,13 +14,22 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(''); // Clear previous errors
     try {
       const response = await api.post('/auth/login', formData);
-      setToken(response.data.token); // Save the token to localStorage
-      alert('Login successful!');
+      if (response && response.data) {
+        console.log('Login successful:', response.data);
+        // Redirect or handle successful login
+      } else {
+        setError('Unexpected response from the server.');
+      }
     } catch (error) {
-      console.error('Login failed:', error.response.data);
-      alert('Login failed!');
+      console.error('Login error:', error);
+      if (error.response && error.response.data) {
+        setError(error.response.data.message || 'Login failed.');
+      } else {
+        setError('An error occurred. Please try again.');
+      }
     }
   };
 
@@ -31,6 +40,7 @@ const Login = () => {
         className="bg-white p-6 rounded shadow-md w-96"
       >
         <h2 className="text-2xl font-bold mb-4">Login</h2>
+        {error && <p className="text-red-500 mb-4">{error}</p>}
         <input
           type="email"
           name="email"
@@ -38,6 +48,7 @@ const Login = () => {
           value={formData.email}
           onChange={handleChange}
           className="w-full p-2 mb-4 border rounded"
+          required
         />
         <input
           type="password"
@@ -46,6 +57,7 @@ const Login = () => {
           value={formData.password}
           onChange={handleChange}
           className="w-full p-2 mb-4 border rounded"
+          required
         />
         <button
           type="submit"
