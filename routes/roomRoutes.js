@@ -1,23 +1,30 @@
-// routes/roomRoutes.js
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const router = express.Router();
 const {
   getAllRooms,
   createRoom,
-  updateRoom
-} = require('../controllers/roomController'); // ✅ Correct names now
-const { createUser } = require('../controllers/userController');
+  updateRoom,
+  deleteRoom, // Added deleteRoom for completeness
+} = require('../controllers/roomController');
 const { protect, authorizeRoles } = require('../middleware/authMiddleware');
 
-router.get('/', getAllRooms);  // ✅ Works now
+// Route to get all rooms (Public)
+router.get('/', getAllRooms);
 
+// Route to create a new room (Protected, Admin only)
 router.post(
   '/',
+  protect,
+  authorizeRoles('admin'), // Only admins can create rooms
   [
-    body('username').notEmpty().withMessage('Username is required'),
-    body('email').isEmail().withMessage('Valid email required'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+    body('roomNumber').notEmpty().withMessage('Room number is required'),
+    body('type').notEmpty().withMessage('Room type is required'),
+    body('price').isNumeric().withMessage('Price must be a number'),
+    body('status')
+      .optional()
+      .isIn(['Available', 'Occupied'])
+      .withMessage('Status must be either "Available" or "Occupied"'),
   ],
   (req, res, next) => {
     const errors = validationResult(req);
@@ -26,15 +33,22 @@ router.post(
     }
     next();
   },
-  createUser // This must be a function!
+  createRoom
 );
 
+// Route to update a room (Protected, Admin only)
 router.put(
   '/:id',
+  protect,
+  authorizeRoles('admin'), // Only admins can update rooms
   [
     body('roomNumber').optional().notEmpty().withMessage('Room number cannot be empty'),
     body('type').optional().notEmpty().withMessage('Room type cannot be empty'),
-    // Add more validations as needed
+    body('price').optional().isNumeric().withMessage('Price must be a number'),
+    body('status')
+      .optional()
+      .isIn(['Available', 'Occupied'])
+      .withMessage('Status must be either "Available" or "Occupied"'),
   ],
   (req, res, next) => {
     const errors = validationResult(req);
@@ -43,9 +57,10 @@ router.put(
     }
     next();
   },
-  protect,
-  authorizeRoles('admin'),
   updateRoom
 );
+
+// Route to delete a room (Protected, Admin only)
+router.delete('/:id', protect, authorizeRoles('admin'), deleteRoom);
 
 module.exports = router;
