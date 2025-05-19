@@ -1,5 +1,5 @@
 const express = require('express');
-const { getRooms, addRoom, updateRoom, deleteRoom } = require('../controllers/roomsController');
+const { getRooms, addRoom, updateRoom, deleteRoom } = require('../controllers/roomController');
 const router = express.Router();
 
 // Fetch all rooms
