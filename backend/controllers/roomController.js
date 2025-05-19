@@ -1,52 +1,63 @@
 const Room = require('../models/Room');
-const Resident = require('../models/Resident');
 
-exports.getAllRooms = async (req, res) => {
-  const rooms = await Room.find();
-  res.json(rooms);
-};
-
-exports.createRoom = async (req, res) => {
-  const newRoom = await Room.create(req.body);
-  res.status(201).json(newRoom);
-};
-
-exports.updateRoom = async (req, res) => {
+// Get all rooms
+const getAllRooms = async (req, res) => {
   try {
-    const { id } = req.params; // Extract room ID from the request parameters
-    const updates = req.body; // Extract updates from the request body
-
-    // Find the room by ID and update it
-    const room = await Room.findByIdAndUpdate(id, updates, { new: true });
-
-    if (!room) {
-      return res.status(404).json({ message: 'Room not found' });
-    }
-
-    res.status(200).json(room);
+    const rooms = await Room.find().populate('currentResident', 'name email'); // Populate resident details
+    res.status(200).json(rooms);
   } catch (error) {
-    console.error('❌ Room Update Error:', error.message);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ message: 'Failed to fetch rooms', error: error.message });
   }
 };
 
-exports.deleteRoom = async (req, res) => {
-  await Room.findByIdAndDelete(req.params.id);
-  res.json({ message: 'Room deleted' });
+// Create a new room
+const createRoom = async (req, res) => {
+  try {
+    const { number, type, price } = req.body;
+
+    // Check if the room number already exists
+    const existingRoom = await Room.findOne({ number });
+    if (existingRoom) {
+      return res.status(400).json({ message: 'Room number already exists' });
+    }
+
+    const newRoom = new Room({ number, type, price });
+    const savedRoom = await newRoom.save();
+    res.status(201).json(savedRoom);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to create room', error: error.message });
+  }
 };
 
-exports.getAllResidents = async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
+// Update a room
+const updateRoom = async (req, res) => {
+  try {
+    const updatedRoom = await Room.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updatedRoom) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+    res.status(200).json(updatedRoom);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update room', error: error.message });
+  }
+};
 
-  const residents = await Resident.find().skip(skip).limit(limit);
-  const total = await Resident.countDocuments();
+// Delete a room
+const deleteRoom = async (req, res) => {
+  try {
+    const deletedRoom = await Room.findByIdAndDelete(req.params.id);
+    if (!deletedRoom) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+    res.status(200).json({ message: 'Room deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to delete room', error: error.message });
+  }
+};
 
-  res.json({
-    total,
-    page,
-    pages: Math.ceil(total / limit),
-    residents
-  });
+module.exports = {
+  getAllRooms,
+  createRoom,
+  updateRoom,
+  deleteRoom,
 };

@@ -1,6 +1,6 @@
 // src/pages/Register.js
 import React, { useState } from "react";
-import axios from "../services/api";
+import axios from "../service/api";
 import { useNavigate } from "react-router-dom";
 
 const Register = () => {
@@ -85,6 +85,7 @@ const Register = () => {
           className="w-full p-2 mb-4 border rounded"
         >
           <option value="resident">Resident</option>
+          <option value="staff">Staff</option>
           <option value="admin">Admin</option>
           <option value="staff">Staff</option>
         </select>
