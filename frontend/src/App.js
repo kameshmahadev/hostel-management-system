@@ -7,6 +7,7 @@ import Rooms from './pages/Rooms';
 import Bookings from './pages/Bookings';
 import Maintenance from './pages/Maintenance';
 import Billing from './pages/Billing';
+import RoomsList from './components/RoomsList';
 
 const App = () => {
   return (
@@ -23,7 +24,8 @@ const App = () => {
         <Route path="/bookings" element={<Bookings />} />
         <Route path="/maintenance" element={<Maintenance />} />
         <Route path="/billing" element={<Billing />} />
-        
+        <Route path="/rooms" element={<RoomsList />} />
+
         {/* Fallback route for unmatched paths */}
         <Route path="*" element={<h1>404 - Page Not Found</h1>} />
       </Routes>
