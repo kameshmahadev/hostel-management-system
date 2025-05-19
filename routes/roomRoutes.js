@@ -8,7 +8,7 @@ const {
   addRoom,
   updateRoom: updateRoomBasic,
   deleteRoom: deleteRoomBasic,
-} = require('../controllers/roomsController');
+} = require('../controllers/roomController');
 
 const {
   getAllRooms,
