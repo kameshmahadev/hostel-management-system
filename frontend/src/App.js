@@ -13,21 +13,16 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        {/* Redirect "/" to "/login" */}
         <Route path="/" element={<Navigate to="/login" />} />
-
-        {/* Define all valid routes */}
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/rooms" element={<RoomsList />} />
+        <Route path="/rooms" element={<RoomsList />} /> {/* Route for Rooms Page */}
         <Route path="/bookings" element={<Bookings />} />
         <Route path="/maintenance" element={<Maintenance />} />
         <Route path="/billing" element={<Billing />} />
-        <Route path="/add-room" element={<AddRoom />} />
-
-        {/* Fallback route for unmatched paths */}
-        <Route path="*" element={<h1>404 - Page Not Found</h1>} />
+        <Route path="/add-room" element={<AddRoom />} /> {/* Route for Add Room Page */}
+        <Route path="" element={<h1>404 - Page Not Found</h1>} /> {/ Catch-all route */}
       </Routes>
     </Router>
   );
