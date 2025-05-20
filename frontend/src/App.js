@@ -1,13 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Register from './pages/Register'; // Ensure this file exists and is correctly exported
-import Login from './pages/Login'; // Ensure this file exists and is correctly exported
-import Dashboard from './pages/Dashboard'; // Ensure this file exists and is correctly exported
-import Bookings from './pages/Bookings'; // Ensure this file exists and is correctly exported
-import Maintenance from './pages/Maintenance'; // Ensure this file exists and is correctly exported
-import Billing from './pages/Billing'; // Ensure this file exists and is correctly exported
-import RoomsList from './components/RoomsList'; // Ensure this file exists and is correctly exported
-import AddRoom from './components/AddRoom'; // Ensure this file exists and is correctly exported
+import Register from './pages/Register';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Bookings from './pages/Bookings';
+import Maintenance from './pages/Maintenance';
+import Billing from './pages/Billing';
+import RoomsList from './components/RoomsList';
+import AddRoom from './components/AddRoom';
 
 const App = () => {
   return (
@@ -25,7 +25,9 @@ const App = () => {
         <Route path="/maintenance" element={<Maintenance />} />
         <Route path="/billing" element={<Billing />} />
         <Route path="/add-room" element={<AddRoom />} /> {/* Route for Add Room Page */}
-        <Route path="" element={<h1>404 - Page Not Found</h1>} /> {/ Catch-all route */}
+        
+        {/* Catch-all route for undefined pages */}
+        <Route path="*" element={<h1>404 - Page Not Found</h1>} />
       </Routes>
     </Router>
   );

@@ -1,41 +1,55 @@
-// backend/controllers/maintenanceController.js
-
 const Maintenance = require('../models/Maintenance');
-const Resident = require('../models/Resident');
 
-exports.createMaintenance = async (req, res) => {
-  const maintenance = await Maintenance.create(req.body);
-  res.status(201).json(maintenance);
+// Create a new maintenance request
+const createRequest = async (req, res) => {
+  try {
+    const { resident, room, issue, priority } = req.body;
+    if (!resident || !room || !issue) {
+      return res.status(400).json({ message: 'Resident, room, and issue are required' });
+    }
+
+    const newRequest = new Maintenance({ resident, room, issue, priority });
+    await newRequest.save();
+
+    res.status(201).json({ message: 'Maintenance request created', maintenance: newRequest });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
 };
 
-exports.getAllMaintenance = async (req, res) => {
-  const maintenance = await Maintenance.find().populate('room');
-  res.json(maintenance);
+// Get all maintenance requests
+const getAllRequests = async (req, res) => {
+  try {
+    const requests = await Maintenance.find()
+      .populate('resident', 'name email')
+      .populate('room', 'number type');
+    res.status(200).json(requests);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
 };
 
-exports.updateMaintenance = async (req, res) => {
-  const maintenance = await Maintenance.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  if (!maintenance) return res.status(404).json({ message: 'Maintenance not found' });
-  res.json(maintenance);
+// Update maintenance request status
+const updateRequestStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const request = await Maintenance.findById(id);
+    if (!request) return res.status(404).json({ message: 'Maintenance request not found' });
+
+    request.status = status || request.status;
+    request.updatedAt = Date.now();
+
+    await request.save();
+    res.status(200).json({ message: 'Request status updated', maintenance: request });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
 };
 
-exports.deleteMaintenance = async (req, res) => {
-  await Maintenance.findByIdAndDelete(req.params.id);
-  res.json({ message: 'Maintenance deleted' });
-};
-
-exports.getAllResidents = async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
-
-  const residents = await Resident.find().skip(skip).limit(limit);
-  const total = await Resident.countDocuments();
-
-  res.json({
-    total,
-    page,
-    pages: Math.ceil(total / limit),
-    residents
-  });
+module.exports = {
+  createRequest,
+  getAllRequests,
+  updateRequestStatus,
 };
