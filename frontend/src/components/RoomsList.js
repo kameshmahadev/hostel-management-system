@@ -7,14 +7,16 @@ const RoomsList = () => {
 
   // Fetch rooms from the backend
   const fetchRooms = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/api/rooms'); // Backend URL
-      setRooms(response.data); // Update state with fetched rooms
-    } catch (err) {
-      setError('Failed to fetch rooms. Please try again later.');
-      console.error(err);
-    }
-  };
+  try {
+    console.log('Fetching rooms...');
+    const response = await axios.get('http://localhost:5000/api/rooms');
+    console.log('Rooms fetched:', response.data);
+    setRooms(response.data);
+  } catch (err) {
+    console.error('Error fetching rooms:', err);
+    setError('Failed to fetch rooms. Please try again later.');
+  }
+};
 
   // Fetch rooms when the component loads
   useEffect(() => {
