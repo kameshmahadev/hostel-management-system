@@ -68,7 +68,7 @@ const deleteBill = async (req, res) => {
     const bill = await Bill.findById(req.params.id);
     if (!bill) return res.status(404).json({ message: 'Bill not found' });
 
-    await bill.remove();
+    await Bill.deleteOne({ _id: bill._id });
     res.json({ message: 'Bill deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Failed to delete bill', error: err.message });
