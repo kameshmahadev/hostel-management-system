@@ -3,7 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 
-// Load environment variables from .env file
+// Load environment variables
 dotenv.config();
 
 const authRoutes = require('./routes/authRoutes');
@@ -33,14 +33,13 @@ app.get('/', (req, res) => {
   res.send('Welcome to the Hostel Management API');
 });
 
-// DB + Server start
+// Connect DB and start server
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log('Connected to MongoDB');
     app.listen(PORT, () => {
-      // ✅ Use backticks (`) for template strings
-      console.log(`Server running on http://localhost:${PORT}`);
+      console.log(`Server running at http://localhost:${PORT}`);
     });
   })
   .catch((error) => {
