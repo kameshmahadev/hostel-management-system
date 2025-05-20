@@ -2,32 +2,28 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const RoomsList = () => {
-  const [rooms, setRooms] = useState([]); // State to store rooms
-  const [error, setError] = useState(''); // State to store errors
+  const [rooms, setRooms] = useState([]);
+  const [error, setError] = useState('');
 
-  // Fetch rooms from the backend
   const fetchRooms = async () => {
-  try {
-    console.log('Fetching rooms...');
-    const response = await axios.get('http://localhost:5000/api/rooms');
-    console.log('Rooms fetched:', response.data);
-    setRooms(response.data);
-  } catch (err) {
-    console.error('Error fetching rooms:', err);
-    setError('Failed to fetch rooms. Please try again later.');
-  }
-};
+    try {
+      const response = await axios.get('http://localhost:5000/api/rooms');
+      setRooms(response.data);
+    } catch (err) {
+      setError('Failed to fetch rooms. Please try again later.');
+      console.error(err);
+    }
+  };
 
-  // Fetch rooms when the component loads
   useEffect(() => {
     fetchRooms();
   }, []);
 
   return (
-    <div>
-      <h1>Rooms</h1>
+    <div style={{ maxWidth: '800px', margin: '50px auto' }}>
+      <h1 style={{ textAlign: 'center' }}>Rooms List</h1>
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      <table border="1" style={{ width: '100%', textAlign: 'left' }}>
+      <table border="1" style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
             <th>Room Number</th>

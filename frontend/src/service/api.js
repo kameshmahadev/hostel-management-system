@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'https://localhost:5000.com/api',
+  baseURL: 'https://hostel-management-system-tooc.onrender.com',
   headers: {
     'Content-Type': 'application/json',
   },
