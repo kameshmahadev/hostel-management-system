@@ -1,163 +1,74 @@
+// controllers/userController.js
 const User = require('../models/User');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 
-// Function to generate a JWT token
-const generateToken = (id, role) => {
-  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
-    expiresIn: '7d',
-  });
-};
-
-// Controller for user registration
-const register = async (req, res) => {
-  const { name, email, password, role, username } = req.body;
-
+// GET: Get all users (Admin only)
+const getAllUsers = async (req, res) => {
   try {
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: 'Email is already registered' });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const user = await User.create({
-      name,
-      username,
-      email,
-      password: hashedPassword,
-      role,
-    });
-
-    const token = generateToken(user._id, user.role);
-
-    res.status(201).json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        username: user.username,
-        role: user.role,
-      },
-    });
-  } catch (error) {
-    if (error.code === 11000) {
-      const duplicateField = Object.keys(error.keyPattern)[0];
-      return res.status(400).json({
-        message: `Duplicate value for '${duplicateField}' — must be unique`,
-      });
-    }
-
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map((err) => err.message);
-      return res.status(400).json({
-        message: 'Validation error',
-        details: messages,
-      });
-    }
-
-    console.error('Registration error:', error.message || error);
-    res.status(500).json({ message: 'Server error during registration' });
+    const users = await User.find().select('-password');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch users', error: err.message });
   }
 };
 
-// Controller for user login
-const login = async (req, res) => {
-  const { email, password } = req.body;
-
+// GET: Get a single user by ID (Admin or self)
+const getUserById = async (req, res) => {
   try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+    const user = await User.findById(req.params.id).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Only admin or self can view
+    if (req.user.role !== 'admin' && req.user._id.toString() !== user._id.toString()) {
+      return res.status(403).json({ message: 'Unauthorized access' });
     }
 
-    const isPasswordMatch = await bcrypt.compare(password, user.password);
-    if (!isPasswordMatch) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
-
-    const token = generateToken(user._id, user.role);
-
-    res.status(200).json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        username: user.username,
-        role: user.role,
-      },
-    });
-  } catch (error) {
-    console.error('Login error:', error.message || error);
-    res.status(500).json({ message: 'Server error during login' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch user', error: err.message });
   }
 };
 
-// Controller for creating a new user (admin functionality)
-const createUser = async (req, res) => {
-  try {
-    const { name, username, email, password, role } = req.body;
-
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: 'Email is already registered' });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const user = await User.create({
-      name,
-      username,
-      email,
-      password: hashedPassword,
-      role,
-    });
-
-    res.status(201).json({
-      id: user._id,
-      name: user.name,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-    });
-  } catch (error) {
-    console.error('User creation error:', error.message || error);
-    res.status(500).json({ message: 'Server error during user creation' });
-  }
-};
-
-// Controller for updating a user
+// PUT: Update user profile (Admin or self)
 const updateUser = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updates = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    if (updates.password) {
-      const salt = await bcrypt.genSalt(10);
-      updates.password = await bcrypt.hash(updates.password, salt);
+    // Only admin or self can update
+    if (req.user.role !== 'admin' && req.user._id.toString() !== user._id.toString()) {
+      return res.status(403).json({ message: 'Unauthorized to update this user' });
     }
 
-    const user = await User.findByIdAndUpdate(id, updates, { new: true });
+    const { name, email, phone, role } = req.body;
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (phone) user.phone = phone;
+    if (req.user.role === 'admin' && role) user.role = role;
 
-    res.json({
-      id: user._id,
-      name: user.name,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-    });
-  } catch (error) {
-    console.error('User update error:', error.message || error);
-    res.status(500).json({ message: 'Server error during user update' });
+    const updated = await user.save();
+    res.json({ message: 'User updated', user: updated });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to update user', error: err.message });
   }
 };
 
-module.exports = { register, login, createUser, updateUser };
+// DELETE: Remove user (Admin only)
+const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    await user.remove();
+    res.json({ message: 'User deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete user', error: err.message });
+  }
+};
+
+module.exports = {
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+};
