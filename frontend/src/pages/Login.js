@@ -1,6 +1,7 @@
 import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../service/auth';
+import axios from 'axios';
+import { jwtDecode } from 'jwt-decode'; // ✅ Correct import
 import { AuthContext } from '../context/AuthContext';
 
 const Login = () => {
@@ -13,14 +14,23 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      const data = await login(formData);
-      setUser(data.user); // Optional: if returned
-      navigate('/');
+      const res = await axios.post("http://localhost:5000/api/auth/login", {
+        email: formData.email,
+        password: formData.password,
+      });
+
+      const { token } = res.data;
+      localStorage.setItem("token", token);
+      const decoded = jwtDecode(token); // ✅ Correct usage
+      setUser(decoded);
+      navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      console.error("Login failed", err);
+      setError("Invalid credentials");
     }
   };
 
