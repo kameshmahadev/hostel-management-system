@@ -23,8 +23,8 @@ const RoomsList = () => {
 
   return (
     <div>
-      <h1>Rooms List</h1>
-      {error && <p style={{ color: 'red' }} >{error}</p>}
+      <h1>Rooms</h1>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <table border="1" style={{ width: '100%', textAlign: 'left' }}>
         <thead>
           <tr>
@@ -35,14 +35,22 @@ const RoomsList = () => {
           </tr>
         </thead>
         <tbody>
-          {rooms.map((room) => (
-            <tr key={room._id}>
-              <td>{room.number}</td>
-              <td>{room.type}</td>
-              <td>{room.price || 'N/A'}</td>
-              <td>{room.occupied ? 'Yes' : 'No'}</td>
+          {rooms && rooms.length > 0 ? (
+            rooms.map((room) => (
+              <tr key={room._id}>
+                <td>{room.number || 'N/A'}</td>
+                <td>{room.type || 'N/A'}</td>
+                <td>{room.price || 'N/A'}</td>
+                <td>{room.occupied ? 'Yes' : 'No'}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="4" style={{ textAlign: 'center' }}>
+                No rooms available.
+              </td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
     </div>
