@@ -1,66 +1,84 @@
-// backend/controllers/billController.js
+// controllers/billController.js
+const Bill = require('../models/bill'); // ✅ FIXED import path
 
-const Bill = require('../models/Bill');
-const Resident = require('../models/Resident');
+// Create a new bill
+const createBill = async (req, res) => {
+  try {
+    const { resident, amount, dueDate, status, description } = req.body;
 
-// Create new bill
-exports.createBill = async (req, res) => {
-  const bill = await Bill.create(req.body);
-  res.status(201).json(bill);
+    const newBill = await Bill.create({
+      resident,
+      amount,
+      dueDate,
+      status,
+      description,
+    });
+
+    res.status(201).json({ message: 'Bill created', bill: newBill });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to create bill', error: err.message });
+  }
 };
 
-// Get all bills
-exports.getAllBills = async (req, res) => {
-  const bills = await Bill.find().populate('resident');
-  res.json(bills);
+// Get all bills (admin/staff) or own bills (resident)
+const getBills = async (req, res) => {
+  try {
+    const filter = req.user.role === 'resident' ? { resident: req.user._id } : {};
+    const bills = await Bill.find(filter).populate('resident', 'name email');
+    res.json(bills);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch bills', error: err.message });
+  }
 };
 
-// Get a single bill
+// Get a single bill by ID
 const getBillById = async (req, res) => {
   try {
-    const bill = await Bill.findById(req.params.id);
+    const bill = await Bill.findById(req.params.id).populate('resident', 'name email');
     if (!bill) return res.status(404).json({ message: 'Bill not found' });
     res.json(bill);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching bill', error: err.message });
   }
 };
 
 // Update a bill
-exports.updateBill = async (req, res) => {
-  const bill = await Bill.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  if (!bill) return res.status(404).json({ message: 'Bill not found' });
-  res.json(bill);
+const updateBill = async (req, res) => {
+  try {
+    const bill = await Bill.findById(req.params.id);
+    if (!bill) return res.status(404).json({ message: 'Bill not found' });
+
+    const { amount, dueDate, status, description } = req.body;
+
+    if (amount !== undefined) bill.amount = amount;
+    if (dueDate !== undefined) bill.dueDate = dueDate;
+    if (status !== undefined) bill.status = status;
+    if (description !== undefined) bill.description = description;
+
+    const updated = await bill.save();
+    res.json({ message: 'Bill updated', bill: updated });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to update bill', error: err.message });
+  }
 };
 
 // Delete a bill
-exports.deleteBill = async (req, res) => {
-  await Bill.findByIdAndDelete(req.params.id);
-  res.json({ message: 'Bill deleted' });
-};
+const deleteBill = async (req, res) => {
+  try {
+    const bill = await Bill.findById(req.params.id);
+    if (!bill) return res.status(404).json({ message: 'Bill not found' });
 
-// Get all residents with pagination
-exports.getAllResidents = async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
-
-  const residents = await Resident.find().skip(skip).limit(limit);
-  const total = await Resident.countDocuments();
-
-  res.json({
-    total,
-    page,
-    pages: Math.ceil(total / limit),
-    residents
-  });
+    await bill.remove();
+    res.json({ message: 'Bill deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete bill', error: err.message });
+  }
 };
 
 module.exports = {
-  createBill: exports.createBill,
-  getAllBills: exports.getAllBills,
+  createBill,
+  getBills,
   getBillById,
-  updateBill: exports.updateBill,
-  deleteBill: exports.deleteBill,
-  getAllResidents: exports.getAllResidents,
+  updateBill,
+  deleteBill,
 };
