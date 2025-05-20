@@ -1,23 +1,23 @@
 const express = require('express');
-const { body, validationResult } = require('express-validator');
-const { createRequest, getAllRequests, updateRequestStatus } = require('../controllers/maintenanceController');
+const router = express.Router();
+const {
+  createMaintenance,
+  getAllMaintenance,
+  updateMaintenance,
+  deleteMaintenance
+} = require('../controllers/maintenanceController');
+
 const { protect } = require('../middleware/authMiddleware');
 
-const router = express.Router();
+// Debug log for route hit confirmation
+router.use((req, res, next) => {
+  console.log(`[Maintenance] ${req.method} ${req.originalUrl}`);
+  next();
+});
 
-router.post(
-  '/',
-  protect,
-  [
-    body('resident').notEmpty().withMessage('Resident is required'),
-    body('room').notEmpty().withMessage('Room is required'),
-    body('issue').notEmpty().withMessage('Issue is required'),
-    body('priority').optional().isIn(['Low', 'Medium', 'High']).withMessage('Invalid priority')
-  ],
-  createRequest
-);
-
-router.get('/', protect, getAllRequests);
-router.put('/:id', protect, updateRequestStatus);
+router.post('/', protect, createMaintenance);
+router.get('/', protect, getAllMaintenance);
+router.put('/:id', protect, updateMaintenance);
+router.delete('/:id', protect, deleteMaintenance);
 
 module.exports = router;

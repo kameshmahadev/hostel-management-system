@@ -1,63 +1,70 @@
-const mongoose = require('mongoose');
 const Booking = require('../models/Booking');
 
-exports.getAllBookings = async (req, res) => {
-  const bookings = await Booking.find();
-  res.json(bookings);
-};
-
-exports.createBooking = async (req, res) => {
-  const newBooking = await Booking.create(req.body);
-  res.status(201).json(newBooking);
-};
-
-exports.updateBooking = async (req, res) => {
+const createBooking = async (req, res) => {
   try {
-    const { id } = req.params; // Extract booking ID from the request parameters
-    const bookingId = String(id); // Ensure the ID is treated as a string
-    console.log('🔍 Booking ID:', bookingId); // Log the booking ID for debugging
+    const { room, startDate, endDate } = req.body;
 
-    // Check if the ID is a valid ObjectId
-    const isValidObjectId = mongoose.Types.ObjectId.isValid(bookingId);
-    console.log('✅ Is Valid ObjectId:', isValidObjectId); // Log the result of the validation
+    // Check for overlapping bookings
+    const overlappingBooking = await Booking.findOne({
+      room,
+      $or: [
+        {
+          startDate: { $lte: new Date(endDate) },
+          endDate: { $gte: new Date(startDate) },
+        },
+      ],
+    });
 
-    if (!isValidObjectId) {
-      return res.status(400).json({ message: 'Invalid booking ID format' });
+    if (overlappingBooking) {
+      return res.status(400).json({ message: 'Room is already booked for the selected dates.' });
     }
 
-    const updates = req.body; // Extract updates from the request body
+    const booking = new Booking({
+      resident: req.user._id,
+      room,
+      startDate,
+      endDate
+    });
 
-    // Find the booking by ID and update it
-    const booking = await Booking.findByIdAndUpdate(bookingId, updates, { new: true });
-
-    if (!booking) {
-      return res.status(404).json({ message: 'Booking not found' });
-    }
-
-    res.status(200).json(booking); // Return the updated booking
+    await booking.save();
+    res.status(201).json({ message: 'Booking created', booking });
   } catch (error) {
-    console.error('❌ Booking Update Error:', error.message);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-exports.deleteBooking = async (req, res) => {
-  await Booking.findByIdAndDelete(req.params.id);
+const getAllBookings = async (req, res) => {
+  const bookings = await Booking.find().populate('resident room');
+  res.json(bookings);
+};
+
+const getBookingById = async (req, res) => {
+  const booking = await Booking.findById(req.params.id).populate('resident room');
+  if (!booking) return res.status(404).json({ message: 'Booking not found' });
+  res.json(booking);
+};
+
+const updateBooking = async (req, res) => {
+  const booking = await Booking.findById(req.params.id);
+  if (!booking) return res.status(404).json({ message: 'Booking not found' });
+
+  Object.assign(booking, req.body);
+  await booking.save();
+  res.json({ message: 'Booking updated', booking });
+};
+
+const deleteBooking = async (req, res) => {
+  const booking = await Booking.findById(req.params.id);
+  if (!booking) return res.status(404).json({ message: 'Booking not found' });
+
+  await booking.deleteOne();
   res.json({ message: 'Booking deleted' });
 };
 
-exports.getAllResidents = async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
-
-  const residents = await Resident.find().skip(skip).limit(limit);
-  const total = await Resident.countDocuments();
-
-  res.json({
-    total,
-    page,
-    pages: Math.ceil(total / limit),
-    residents
-  });
+module.exports = {
+  createBooking,
+  getAllBookings,
+  getBookingById,
+  updateBooking,
+  deleteBooking,
 };
