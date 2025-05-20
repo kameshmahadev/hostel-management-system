@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Rooms from './pages/Rooms';
 import Bookings from './pages/Bookings';
 import Maintenance from './pages/Maintenance';
 import Billing from './pages/Billing';
@@ -16,16 +15,15 @@ const App = () => {
       <Routes>
         {/* Redirect "/" to "/login" */}
         <Route path="/" element={<Navigate to="/login" />} />
-        
+
         {/* Define all valid routes */}
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/rooms" element={<Rooms />} />
+        <Route path="/rooms" element={<RoomsList />} />
         <Route path="/bookings" element={<Bookings />} />
         <Route path="/maintenance" element={<Maintenance />} />
         <Route path="/billing" element={<Billing />} />
-        <Route path="/rooms" element={<RoomsList />} />
         <Route path="/add-room" element={<AddRoom />} />
 
         {/* Fallback route for unmatched paths */}

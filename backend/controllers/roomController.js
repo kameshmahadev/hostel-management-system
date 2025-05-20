@@ -3,9 +3,12 @@ const Room = require('../models/Room');
 // Fetch all rooms
 const getRooms = async (req, res) => {
   try {
+    console.log('Fetching rooms from the database...');
     const rooms = await Room.find();
+    console.log('Rooms fetched successfully:', rooms);
     res.status(200).json(rooms);
   } catch (error) {
+    console.error('Error fetching rooms:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
