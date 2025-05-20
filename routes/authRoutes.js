@@ -1,14 +1,26 @@
+// routes/authRoutes.js
 const express = require('express');
-const { registerUser, loginUser, logoutUser } = require('../controllers/authController'); // Ensure these functions exist
+const { registerUser, loginUser } = require('../controllers/authController');
+const { body, validationResult } = require('express-validator');
+
 const router = express.Router();
 
-// Route to register a new user
-router.post('/register', registerUser);
+router.post(
+  '/register',
+  [
+    body('username').notEmpty().withMessage('Username is required'),
+    body('email').isEmail().withMessage('Valid email required'),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  ],
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    registerUser(req, res);
+  }
+);
 
-// Route to log in a user
 router.post('/login', loginUser);
-
-// Route to log out a user
-router.post('/logout', logoutUser);
 
 module.exports = router;

@@ -2,14 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
-const authRoutes = require('./routes/authRoutes'); // Adjust if needed
-const roomRoutes = require('./routes/roomRoutes'); // Added missing import
-const bookingRoutes = require('./routes/bookingRoutes'); // Adjust if needed
-const userRoutes = require('./routes/userRoutes'); // Adjust if needed
-const billRoutes = require('./routes/billRoutes'); // Adjust if needed
-const maintenanceRoutes = require('./routes/maintenanceRoutes'); // Adjust if needed
 
+// Load environment variables from .env file
 dotenv.config();
+
+const authRoutes = require('./routes/authRoutes');
+const roomRoutes = require('./routes/roomRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
+const userRoutes = require('./routes/userRoutes');
+const billRoutes = require('./routes/billRoutes');
+const maintenanceRoutes = require('./routes/maintenanceRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,7 +22,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/rooms', roomRoutes); // Fixed missing import
+app.use('/api/rooms', roomRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/bills', billRoutes);
@@ -37,6 +39,7 @@ mongoose
   .then(() => {
     console.log('Connected to MongoDB');
     app.listen(PORT, () => {
+      // ✅ Use backticks (`) for template strings
       console.log(`Server running on http://localhost:${PORT}`);
     });
   })
