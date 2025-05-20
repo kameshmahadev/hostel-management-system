@@ -1,54 +1,88 @@
-import React, { useEffect, useState } from 'react';
+// components/RoomsList.js
+import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
+import { AuthContext } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
 const RoomsList = () => {
   const [rooms, setRooms] = useState([]);
-  const [error, setError] = useState('');
+  const { user } = useContext(AuthContext);
 
-  const fetchRooms = async () => {
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/rooms', {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        });
+        setRooms(res.data);
+      } catch (err) {
+        console.error('Failed to fetch rooms:', err);
+      }
+    };
+
+    if (user?.token) fetchRooms();
+  }, [user]);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this room?')) return;
+
     try {
-      const response = await axios.get('http://localhost:5000/api/rooms');
-      setRooms(response.data);
+      await axios.delete(`http://localhost:5000/api/rooms/${id}`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+      setRooms((prev) => prev.filter((room) => room._id !== id));
     } catch (err) {
-      setError('Failed to fetch rooms. Please try again later.');
-      console.error(err);
+      alert('Delete failed');
     }
   };
 
-  useEffect(() => {
-    fetchRooms();
-  }, []);
-
   return (
-    <div style={{ maxWidth: '800px', margin: '50px auto' }}>
-      <h1 style={{ textAlign: 'center' }}>Rooms List</h1>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <table border="1" style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-        <thead>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold">Room List</h2>
+        {user.role !== 'resident' && (
+          <Link
+            to="/add-room"
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            + Add Room
+          </Link>
+        )}
+      </div>
+      <table className="w-full border shadow">
+        <thead className="bg-gray-100">
           <tr>
-            <th>Room Number</th>
-            <th>Type</th>
-            <th>Price</th>
-            <th>Occupied</th>
+            <th className="p-2 border">Room No</th>
+            <th className="p-2 border">Type</th>
+            <th className="p-2 border">Capacity</th>
+            <th className="p-2 border">Status</th>
+            {user.role !== 'resident' && <th className="p-2 border">Actions</th>}
           </tr>
         </thead>
         <tbody>
-          {rooms && rooms.length > 0 ? (
-            rooms.map((room) => (
-              <tr key={room._id}>
-                <td>{room.number || 'N/A'}</td>
-                <td>{room.type || 'N/A'}</td>
-                <td>{room.price || 'N/A'}</td>
-                <td>{room.occupied ? 'Yes' : 'No'}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="4" style={{ textAlign: 'center' }}>
-                No rooms available.
-              </td>
+          {rooms.map((room) => (
+            <tr key={room._id}>
+              <td className="p-2 border">{room.number}</td>
+              <td className="p-2 border">{room.type}</td>
+              <td className="p-2 border">{room.capacity}</td>
+              <td className="p-2 border">{room.occupied ? 'Occupied' : 'Available'}</td>
+              {user.role !== 'resident' && (
+                <td className="p-2 border space-x-2">
+                  {/* Add Edit option later */}
+                  <button
+                    onClick={() => handleDelete(room._id)}
+                    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                </td>
+              )}
             </tr>
-          )}
+          ))}
         </tbody>
       </table>
     </div>

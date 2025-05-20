@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -9,25 +10,94 @@ import Billing from './pages/Billing';
 import RoomsList from './components/RoomsList';
 import AddRoom from './components/AddRoom';
 
+import { AuthContext } from './context/AuthContext';
+
+// ProtectedRoute component: checks if user is logged in and optionally checks role
+const ProtectedRoute = ({ children, role }) => {
+  const { user } = useContext(AuthContext);
+
+  if (!user) {
+    // Not logged in, redirect to login
+    return <Navigate to="/login" />;
+  }
+
+  if (role && user.role !== role) {
+    // Logged in but unauthorized role
+    return <Navigate to="/dashboard" />; // or an Unauthorized page
+  }
+
+  // Authorized, render children
+  return children;
+};
+
 const App = () => {
   return (
     <Router>
       <Routes>
         {/* Redirect "/" to "/login" */}
         <Route path="/" element={<Navigate to="/login" />} />
-        
-        {/* Define all valid routes */}
+
+        {/* Public routes */}
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/rooms" element={<RoomsList />} /> {/* Route for Rooms Page */}
-        <Route path="/bookings" element={<Bookings />} />
-        <Route path="/maintenance" element={<Maintenance />} />
-        <Route path="/billing" element={<Billing />} />
-        <Route path="/add-room" element={<AddRoom />} /> {/* Route for Add Room Page */}
-        
-        {/* Catch-all route for undefined pages */}
-        <Route path="*" element={<h1>404 - Page Not Found</h1>} />
+
+        {/* Protected routes - all require login */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/rooms"
+          element={
+            <ProtectedRoute role="admin">
+              <RoomsList />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/add-room"
+          element={
+            <ProtectedRoute role="admin">
+              <AddRoom />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/bookings"
+          element={
+            <ProtectedRoute>
+              <Bookings />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/maintenance"
+          element={
+            <ProtectedRoute>
+              <Maintenance />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/billing"
+          element={
+            <ProtectedRoute>
+              <Billing />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Catch all unmatched routes */}
+        <Route path="*" element={<h1 className="text-center mt-10">404 - Page Not Found</h1>} />
       </Routes>
     </Router>
   );
