@@ -1,23 +1,29 @@
 const express = require('express');
 const router = express.Router();
-const {
-  createMaintenance,
-  getAllMaintenance,
-  updateMaintenance,
-  deleteMaintenance
-} = require('../controllers/maintenanceController');
 
-const { protect } = require('../middleware/authMiddleware');
-
-// Debug log for route hit confirmation
-router.use((req, res, next) => {
-  console.log(`[Maintenance] ${req.method} ${req.originalUrl}`);
-  next();
+// GET all maintenance requests
+router.get('/', (req, res) => {
+  res.json({ message: 'Fetch all maintenance requests' });
 });
 
-router.post('/', protect, createMaintenance);
-router.get('/', protect, getAllMaintenance);
-router.put('/:id', protect, updateMaintenance);
-router.delete('/:id', protect, deleteMaintenance);
+// GET single request
+router.get('/:id', (req, res) => {
+  res.json({ message: `Fetch maintenance request with ID ${req.params.id}` });
+});
+
+// POST new maintenance request
+router.post('/', (req, res) => {
+  res.json({ message: 'Create maintenance request', data: req.body });
+});
+
+// PUT update request
+router.put('/:id', (req, res) => {
+  res.json({ message: `Update maintenance request with ID ${req.params.id}`, data: req.body });
+});
+
+// DELETE request
+router.delete('/:id', (req, res) => {
+  res.json({ message: `Delete maintenance request with ID ${req.params.id}` });
+});
 
 module.exports = router;
