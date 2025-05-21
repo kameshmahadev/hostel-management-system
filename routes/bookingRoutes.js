@@ -1,22 +1,29 @@
 const express = require('express');
-const { protect } = require('../middleware/authMiddleware');
-const {
-  createBooking,
-  getAllBookings,
-  getBookingById,
-  updateBooking,
-  deleteBooking,
-} = require('../controllers/bookingController');
-
 const router = express.Router();
 
-router.route('/')
-  .post(protect, createBooking)
-  .get(protect, getAllBookings);
+// GET all bookings
+router.get('/', (req, res) => {
+  res.json({ message: 'Fetch all bookings' });
+});
 
-router.route('/:id')
-  .get(protect, getBookingById)
-  .put(protect, updateBooking)
-  .delete(protect, deleteBooking);
+// GET booking by ID
+router.get('/:id', (req, res) => {
+  res.json({ message: `Fetch booking with ID ${req.params.id}` });
+});
+
+// POST create new booking
+router.post('/', (req, res) => {
+  res.json({ message: 'Create new booking', data: req.body });
+});
+
+// PUT update booking
+router.put('/:id', (req, res) => {
+  res.json({ message: `Update booking with ID ${req.params.id}`, data: req.body });
+});
+
+// DELETE booking
+router.delete('/:id', (req, res) => {
+  res.json({ message: `Delete booking with ID ${req.params.id}` });
+});
 
 module.exports = router;

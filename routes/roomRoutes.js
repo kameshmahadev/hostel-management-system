@@ -1,17 +1,29 @@
 const express = require('express');
-const { getRooms, addRoom, updateRoom, deleteRoom } = require('../controllers/roomController');
 const router = express.Router();
 
-// Fetch all rooms
-router.get('/', getRooms);
+// GET all rooms
+router.get('/', (req, res) => {
+  res.json({ message: 'Fetch all rooms' });
+});
 
-// Add a new room
-router.post('/', addRoom);
+// GET single room by ID
+router.get('/:id', (req, res) => {
+  res.json({ message: `Fetch room with ID ${req.params.id}` });
+});
 
-// Update room details
-router.put('/:id', updateRoom);
+// POST create new room
+router.post('/', (req, res) => {
+  res.json({ message: 'Create new room', data: req.body });
+});
 
-// Delete a room
-router.delete('/:id', deleteRoom);
+// PUT update room
+router.put('/:id', (req, res) => {
+  res.json({ message: `Update room with ID ${req.params.id}`, data: req.body });
+});
+
+// DELETE room
+router.delete('/:id', (req, res) => {
+  res.json({ message: `Delete room with ID ${req.params.id}` });
+});
 
 module.exports = router;
