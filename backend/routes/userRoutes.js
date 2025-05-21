@@ -1,18 +1,16 @@
-// routes/userRoutes.js
 const express = require('express');
 const router = express.Router();
-const {
-  getAllUsers,
-  getUserById,
-  updateUser,
-  deleteUser,
-} = require('../controllers/userController');
+const User = require('../models/User');
 
-const { protect, authorizeRoles } = require('../middleware/authMiddleware');
-
-router.get('/', protect, authorizeRoles('admin'), getAllUsers);
-router.get('/:id', protect, getUserById);
-router.put('/:id', protect, updateUser);
-router.delete('/:id', protect, authorizeRoles('admin'), deleteUser);
+// CREATE a user
+router.post('/', async (req, res) => {
+  try {
+    const newUser = new User(req.body);
+    const saved = await newUser.save();
+    res.status(201).json(saved);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
 
 module.exports = router;
