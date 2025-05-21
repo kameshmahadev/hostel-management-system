@@ -1,5 +1,9 @@
 const express = require('express');
 const router = express.Router();
+
+// ✅ Add this line to register the Resident model before using it in populate()
+require('../models/Resident');
+
 const Room = require('../models/Room');
 
 // CREATE a new room
