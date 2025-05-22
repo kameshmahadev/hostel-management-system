@@ -14,13 +14,21 @@ import CreateBill from './components/CreateBill';
 import EditBill from './components/EditBill';
 import { AuthContext } from './context/AuthContext';
 
-// ProtectedRoute component
+// ProtectedRoute component: checks if user is logged in and optionally checks role
 const ProtectedRoute = ({ children, role }) => {
   const { user } = useContext(AuthContext);
 
-  if (!user) return <Navigate to="/login" />;
-  if (role && user.role !== role) return <Navigate to="/dashboard" />;
+  if (!user) {
+    // Not logged in, redirect to login
+    return <Navigate to="/login" />;
+  }
 
+  if (role && user.role !== role) {
+    // Logged in but unauthorized role
+    return <Navigate to="/dashboard" />; // or an Unauthorized page
+  }
+
+  // Authorized, render children
   return children;
 };
 
@@ -28,12 +36,14 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        {/* Public routes */}
+        {/* Redirect "/" to "/login" */}
         <Route path="/" element={<Navigate to="/login" />} />
+
+        {/* Public routes */}
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Protected routes */}
+        {/* Protected routes - all require login */}
         <Route
           path="/dashboard"
           element={
@@ -88,33 +98,7 @@ const App = () => {
           }
         />
 
-        {/* ✅ NEW BILLING ROUTES */}
-        <Route
-          path="/bills"
-          element={
-            <ProtectedRoute>
-              <BillList />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/bills/new"
-          element={
-            <ProtectedRoute>
-              <CreateBill />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/bills/edit/:id"
-          element={
-            <ProtectedRoute>
-              <EditBill />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* 404 page */}
+        {/* Catch all unmatched routes */}
         <Route path="*" element={<h1 className="text-center mt-10">404 - Page Not Found</h1>} />
       </Routes>
     </Router>
