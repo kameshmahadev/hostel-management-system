@@ -40,9 +40,23 @@ const Maintenance = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const userId = localStorage.getItem('userId');
+
+    if (!formData.room || !formData.issue || !formData.priority || !userId) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      resident: userId,
+    };
+
     try {
       const token = localStorage.getItem('token');
-      const response = await api.post('/maintenance', formData, {
+      console.log('Submitting maintenance request:', payload);
+      const response = await api.post('/maintenance', payload, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -51,7 +65,7 @@ const Maintenance = () => {
       setRequests([...requests, response.data]);
       setFormData(prev => ({ ...prev, room: '', issue: '', priority: 'Low' }));
     } catch (error) {
-      console.error('Error submitting maintenance request:', error);
+      console.error('Error submitting maintenance request:', error.response?.data || error.message);
       alert('Failed to submit request.');
     }
   };

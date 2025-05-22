@@ -3,6 +3,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import Sidebar from './Sidebar'; // ✅ Add this
 
 const RoomsList = () => {
   const [rooms, setRooms] = useState([]);
@@ -41,50 +42,52 @@ const RoomsList = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold">Room List</h2>
-        {user.role !== 'resident' && (
-          <Link
-            to="/add-room"
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            + Add Room
-          </Link>
-        )}
-      </div>
-      <table className="w-full border shadow">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-2 border">Room No</th>
-            <th className="p-2 border">Type</th>
-            <th className="p-2 border">Capacity</th>
-            <th className="p-2 border">Status</th>
-            {user.role !== 'resident' && <th className="p-2 border">Actions</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {rooms.map((room) => (
-            <tr key={room._id}>
-              <td className="p-2 border">{room.number}</td>
-              <td className="p-2 border">{room.type}</td>
-              <td className="p-2 border">{room.capacity}</td>
-              <td className="p-2 border">{room.occupied ? 'Occupied' : 'Available'}</td>
-              {user.role !== 'resident' && (
-                <td className="p-2 border space-x-2">
-                  {/* Add Edit option later */}
-                  <button
-                    onClick={() => handleDelete(room._id)}
-                    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                  >
-                    Delete
-                  </button>
-                </td>
-              )}
+    <div className="flex">
+      <Sidebar /> {/* ✅ Add Sidebar */}
+      <div className="flex-1 p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-semibold">Room List</h2>
+          {user.role !== 'resident' && (
+            <Link
+              to="/add-room"
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              + Add Room
+            </Link>
+          )}
+        </div>
+        <table className="w-full border shadow">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-2 border">Room No</th>
+              <th className="p-2 border">Type</th>
+              <th className="p-2 border">Capacity</th>
+              <th className="p-2 border">Status</th>
+              {user.role !== 'resident' && <th className="p-2 border">Actions</th>}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rooms.map((room) => (
+              <tr key={room._id}>
+                <td className="p-2 border">{room.number}</td>
+                <td className="p-2 border">{room.type}</td>
+                <td className="p-2 border">{room.capacity}</td>
+                <td className="p-2 border">{room.occupied ? 'Occupied' : 'Available'}</td>
+                {user.role !== 'resident' && (
+                  <td className="p-2 border space-x-2">
+                    <button
+                      onClick={() => handleDelete(room._id)}
+                      className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
