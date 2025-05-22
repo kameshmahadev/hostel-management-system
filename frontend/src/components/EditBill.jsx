@@ -5,10 +5,17 @@ import { useNavigate, useParams } from 'react-router-dom';
 const EditBill = () => {
   const { id } = useParams();
   const [form, setForm] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    getBillById(id).then(res => setForm(res.data));
+    setLoading(true);
+    getBillById(id)
+      .then(res => setForm(res.data))
+      .catch(() => setError('Failed to load bill'))
+      .finally(() => setLoading(false));
   }, [id]);
 
   const handleChange = (e) => {
@@ -17,26 +24,64 @@ const EditBill = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await updateBill(id, form);
-    navigate('/bills');
+    setSubmitting(true);
+    setError(null);
+    try {
+      await updateBill(id, form);
+      navigate('/bills');
+    } catch {
+      setError('Failed to update bill');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  if (!form) return <p>Loading...</p>;
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
+  if (!form) return null;
 
   return (
     <div>
       <h2>Edit Bill</h2>
       <form onSubmit={handleSubmit}>
-        <label>Amount: <input name="amount" value={form.amount} onChange={handleChange} /></label>
-        <label>Due Date: <input name="dueDate" type="date" value={form.dueDate.split('T')[0]} onChange={handleChange} /></label>
-        <label>Status:
-          <select name="status" value={form.status} onChange={handleChange}>
-            <option>Unpaid</option>
-            <option>Paid</option>
+        <label>
+          Amount:
+          <input
+            name="amount"
+            type="number"
+            value={form.amount}
+            onChange={handleChange}
+            required
+          />
+        </label>
+        <label>
+          Due Date:
+          <input
+            name="dueDate"
+            type="date"
+            value={form.dueDate ? form.dueDate.split('T')[0] : ''}
+            onChange={handleChange}
+            required
+          />
+        </label>
+        <label>
+          Status:
+          <select name="status" value={form.status} onChange={handleChange} required>
+            <option value="Unpaid">Unpaid</option>
+            <option value="Paid">Paid</option>
           </select>
         </label>
-        <label>Description: <textarea name="description" value={form.description} onChange={handleChange} /></label>
-        <button type="submit">Update</button>
+        <label>
+          Description:
+          <textarea
+            name="description"
+            value={form.description || ''}
+            onChange={handleChange}
+          />
+        </label>
+        <button type="submit" disabled={submitting}>
+          {submitting ? 'Updating...' : 'Update'}
+        </button>
       </form>
     </div>
   );

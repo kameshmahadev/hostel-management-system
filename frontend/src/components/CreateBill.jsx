@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createBill } from '../api/billingApi';
-import axios from 'axios';
+import API from '../api/api'; // use centralized axios instance with token
 import { useNavigate } from 'react-router-dom';
 
 const CreateBill = () => {
@@ -12,12 +12,17 @@ const CreateBill = () => {
     description: '',
   });
   const [residents, setResidents] = useState([]);
+  const [loadingResidents, setLoadingResidents] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/users')
+    setLoadingResidents(true);
+    API.get('/users')
       .then(res => setResidents(res.data))
-      .catch(err => console.error(err));
+      .catch(() => setError('Failed to load residents'))
+      .finally(() => setLoadingResidents(false));
   }, []);
 
   const handleChange = (e) => {
@@ -26,34 +31,74 @@ const CreateBill = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await createBill(form);
-    navigate('/bills');
+    setSubmitting(true);
+    setError(null);
+    try {
+      await createBill(form);
+      navigate('/bills');
+    } catch {
+      setError('Failed to create bill');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <div>
       <h2>Create Bill</h2>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <form onSubmit={handleSubmit}>
-        <label>Resident:
-          <select name="resident" value={form.resident} onChange={handleChange}>
-            <option value="">Select...</option>
-            {residents.map(r => (
-              <option key={r._id} value={r._id}>{r.name}</option>
-            ))}
+        <label>
+          Resident:
+          {loadingResidents ? (
+            <p>Loading residents...</p>
+          ) : (
+            <select name="resident" value={form.resident} onChange={handleChange} required>
+              <option value="">Select...</option>
+              {residents.map(r => (
+                <option key={r._id} value={r._id}>{r.name}</option>
+              ))}
+            </select>
+          )}
+        </label>
+        <label>
+          Amount:
+          <input
+            name="amount"
+            type="number"
+            value={form.amount}
+            onChange={handleChange}
+            required
+          />
+        </label>
+        <label>
+          Due Date:
+          <input
+            name="dueDate"
+            type="date"
+            value={form.dueDate}
+            onChange={handleChange}
+            required
+          />
+        </label>
+        <label>
+          Status:
+          <select name="status" value={form.status} onChange={handleChange} required>
+            <option value="Unpaid">Unpaid</option>
+            <option value="Paid">Paid</option>
           </select>
         </label>
-        <label>Amount: <input name="amount" type="number" value={form.amount} onChange={handleChange} /></label>
-        <label>Due Date: <input name="dueDate" type="date" value={form.dueDate} onChange={handleChange} /></label>
-        <label>Status:
-          <select name="status" value={form.status} onChange={handleChange}>
-            <option>Unpaid</option>
-            <option>Paid</option>
-          </select>
+        <label>
+          Description:
+          <textarea
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+          />
         </label>
-        <label>Description:
-          <textarea name="description" value={form.description} onChange={handleChange}></textarea>
-        </label>
-        <button type="submit">Create</button>
+        <button type="submit" disabled={submitting}>
+          {submitting ? 'Creating...' : 'Create'}
+        </button>
       </form>
     </div>
   );
