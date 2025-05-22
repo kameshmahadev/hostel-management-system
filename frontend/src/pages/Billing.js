@@ -26,7 +26,7 @@ const Billing = () => {
         <table className="w-full border-collapse border border-gray-300">
           <thead>
             <tr>
-              <th className="border border-gray-300 p-2">User ID</th>
+              <th className="border border-gray-300 p-2">Resident</th>
               <th className="border border-gray-300 p-2">Amount</th>
               <th className="border border-gray-300 p-2">Due Date</th>
               <th className="border border-gray-300 p-2">Status</th>
@@ -35,9 +35,13 @@ const Billing = () => {
           <tbody>
             {bills.map((bill) => (
               <tr key={bill._id}>
-                <td className="border border-gray-300 p-2">{bill.userId}</td>
-                <td className="border border-gray-300 p-2">{bill.amount}</td>
-                <td className="border border-gray-300 p-2">{bill.dueDate}</td>
+                <td className="border border-gray-300 p-2">
+                  {bill.resident?.name || bill.resident || 'N/A'}
+                </td>
+                <td className="border border-gray-300 p-2">₹{bill.amount}</td>
+                <td className="border border-gray-300 p-2">
+                  {new Date(bill.dueDate).toLocaleDateString()}
+                </td>
                 <td className="border border-gray-300 p-2">{bill.status}</td>
               </tr>
             ))}

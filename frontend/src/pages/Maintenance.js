@@ -26,7 +26,6 @@ const Maintenance = () => {
       }
     };
 
-    // Set resident ID from localStorage or auth context
     const userId = localStorage.getItem('userId');
     if (userId) {
       setFormData(prev => ({ ...prev, resident: userId }));
@@ -41,7 +40,6 @@ const Maintenance = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       const token = localStorage.getItem('token');
       const response = await api.post('/maintenance', formData, {
@@ -49,10 +47,8 @@ const Maintenance = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-
       alert('Maintenance request submitted!');
       setRequests([...requests, response.data]);
-      // Optionally reset the form
       setFormData(prev => ({ ...prev, room: '', issue: '', priority: 'Low' }));
     } catch (error) {
       console.error('Error submitting maintenance request:', error);
@@ -98,23 +94,22 @@ const Maintenance = () => {
             Submit Request
           </button>
         </form>
-
         <table className="w-full border-collapse border border-gray-300">
           <thead>
             <tr>
-              <th className="border border-gray-300 p-2">Room ID</th>
+              <th className="border border-gray-300 p-2">Room</th>
               <th className="border border-gray-300 p-2">Description</th>
               <th className="border border-gray-300 p-2">Priority</th>
               <th className="border border-gray-300 p-2">Status</th>
             </tr>
           </thead>
           <tbody>
-            {requests.map((request) => (
-              <tr key={request._id}>
-                <td className="border border-gray-300 p-2">{request.room}</td>
-                <td className="border border-gray-300 p-2">{request.issue}</td>
-                <td className="border border-gray-300 p-2">{request.priority}</td>
-                <td className="border border-gray-300 p-2">{request.status}</td>
+            {requests.map((req) => (
+              <tr key={req._id}>
+                <td className="border border-gray-300 p-2">{req.room}</td>
+                <td className="border border-gray-300 p-2">{req.issue}</td>
+                <td className="border border-gray-300 p-2">{req.priority}</td>
+                <td className="border border-gray-300 p-2">{req.status}</td>
               </tr>
             ))}
           </tbody>

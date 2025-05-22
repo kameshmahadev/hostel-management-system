@@ -36,10 +36,18 @@ const Bookings = () => {
           <tbody>
             {bookings.map((booking) => (
               <tr key={booking._id}>
-                <td className="border border-gray-300 p-2">{booking.roomId}</td>
-                <td className="border border-gray-300 p-2">{booking.userId}</td>
-                <td className="border border-gray-300 p-2">{booking.startDate}</td>
-                <td className="border border-gray-300 p-2">{booking.endDate}</td>
+                <td className="border border-gray-300 p-2">
+                  {booking.room?.number || booking.roomId || 'N/A'}
+                </td>
+                <td className="border border-gray-300 p-2">
+                  {booking.user?.name || booking.userId || 'N/A'}
+                </td>
+                <td className="border border-gray-300 p-2">
+                  {new Date(booking.startDate).toLocaleDateString()}
+                </td>
+                <td className="border border-gray-300 p-2">
+                  {new Date(booking.endDate).toLocaleDateString()}
+                </td>
                 <td className="border border-gray-300 p-2">{booking.status}</td>
               </tr>
             ))}

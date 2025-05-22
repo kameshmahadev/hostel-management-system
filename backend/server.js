@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 // Load environment variables
 dotenv.config();
 
+// Import routes
 const authRoutes = require('./routes/authRoutes');
 const roomRoutes = require('./routes/roomRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
@@ -20,7 +21,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Routes
+// ✅ Route Registration
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/bookings', bookingRoutes);
@@ -33,15 +34,15 @@ app.get('/', (req, res) => {
   res.send('Welcome to the Hostel Management API');
 });
 
-// Connect DB and start server
+// MongoDB Connection and Server Start
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
-    console.log('Connected to MongoDB');
+    console.log('✅ Connected to MongoDB');
     app.listen(PORT, () => {
-      console.log(`Server running at http://localhost:${PORT}`);
+      console.log(`🚀 Server running at http://localhost:${PORT}`);
     });
   })
   .catch((error) => {
-    console.error('MongoDB connection failed:', error.message);
+    console.error('❌ MongoDB connection failed:', error.message);
   });
