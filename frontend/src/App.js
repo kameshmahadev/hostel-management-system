@@ -9,24 +9,18 @@ import Maintenance from './pages/Maintenance';
 import Billing from './pages/Billing';
 import RoomsList from './components/RoomsList';
 import AddRoom from './components/AddRoom';
-
+import BillList from './components/BillList';
+import CreateBill from './components/CreateBill';
+import EditBill from './components/EditBill';
 import { AuthContext } from './context/AuthContext';
 
-// ProtectedRoute component: checks if user is logged in and optionally checks role
+// ProtectedRoute component
 const ProtectedRoute = ({ children, role }) => {
   const { user } = useContext(AuthContext);
 
-  if (!user) {
-    // Not logged in, redirect to login
-    return <Navigate to="/login" />;
-  }
+  if (!user) return <Navigate to="/login" />;
+  if (role && user.role !== role) return <Navigate to="/dashboard" />;
 
-  if (role && user.role !== role) {
-    // Logged in but unauthorized role
-    return <Navigate to="/dashboard" />; // or an Unauthorized page
-  }
-
-  // Authorized, render children
   return children;
 };
 
@@ -34,14 +28,12 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        {/* Redirect "/" to "/login" */}
-        <Route path="/" element={<Navigate to="/login" />} />
-
         {/* Public routes */}
+        <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Protected routes - all require login */}
+        {/* Protected routes */}
         <Route
           path="/dashboard"
           element={
@@ -96,7 +88,33 @@ const App = () => {
           }
         />
 
-        {/* Catch all unmatched routes */}
+        {/* ✅ NEW BILLING ROUTES */}
+        <Route
+          path="/bills"
+          element={
+            <ProtectedRoute>
+              <BillList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bills/new"
+          element={
+            <ProtectedRoute>
+              <CreateBill />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bills/edit/:id"
+          element={
+            <ProtectedRoute>
+              <EditBill />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 404 page */}
         <Route path="*" element={<h1 className="text-center mt-10">404 - Page Not Found</h1>} />
       </Routes>
     </Router>
