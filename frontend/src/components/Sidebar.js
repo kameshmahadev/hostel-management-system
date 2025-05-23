@@ -12,22 +12,22 @@ const Sidebar = () => {
           </Link>
         </li>
         <li className="mb-4">
-          <Link to="/rooms" className="hover:underline">
+          <Link to="/dashboard/rooms" className="hover:underline">
             Rooms
           </Link>
         </li>
         <li className="mb-4">
-          <Link to="/bookings" className="hover:underline">
+          <Link to="/dashboard/bookings" className="hover:underline">
             Bookings
           </Link>
         </li>
         <li className="mb-4">
-          <Link to="/maintenance" className="hover:underline">
+          <Link to="/dashboard/maintenance" className="hover:underline">
             Maintenance
           </Link>
         </li>
         <li>
-          <Link to="/billing" className="hover:underline">
+          <Link to="/dashboard/billing" className="hover:underline">
             Billing
           </Link>
         </li>

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs'); // ✅ Add this
 
 const userSchema = new mongoose.Schema(
   {
@@ -27,10 +28,22 @@ const userSchema = new mongoose.Schema(
     },
     loggedIn: {
       type: Boolean,
-      default: false, // Tracks whether the user is logged in (optional)
+      default: false,
     },
   },
-  { timestamps: true } // Automatically adds createdAt and updatedAt fields
+  { timestamps: true }
 );
+
+// ✅ Hash password before saving
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(this.password, 12);
+  next();
+});
+
+// ✅ Add matchPassword method
+userSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
 module.exports = mongoose.model('User', userSchema);

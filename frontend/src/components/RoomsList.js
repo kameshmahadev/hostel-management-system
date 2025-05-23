@@ -1,6 +1,6 @@
 // components/RoomsList.js
 import React, { useEffect, useState, useContext } from 'react';
-import axios from 'axios';
+import api from '../service/api'; // Adjust the path if needed
 import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 
@@ -11,7 +11,7 @@ const RoomsList = () => {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/rooms', {
+        const res = await api.get('http://localhost:5000/api/rooms', {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
@@ -36,7 +36,7 @@ const RoomsList = () => {
       });
       setRooms((prev) => prev.filter((room) => room._id !== id));
     } catch (err) {
-      alert('Delete failed');
+      toast.success('Delete failed');
     }
   };
 

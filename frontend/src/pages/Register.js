@@ -1,94 +1,127 @@
-// src/pages/Register.js
-import React, { useState } from "react";
+import React from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as Yup from "yup";
 import axios from "../service/api";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const Register = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    username: "",
-    password: "",
-    role: "resident",
-  });
-  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  // Schema using Yup
+  const validationSchema = Yup.object().shape({
+    name: Yup.string()
+      .required("Name is required")
+      .min(3, "Name must be at least 3 characters"),
+    email: Yup.string()
+      .required("Email is required")
+      .email("Invalid email address"),
+    username: Yup.string()
+      .required("Username is required")
+      .min(3, "Username must be at least 3 characters")
+      .matches(/^\S*$/, "Username cannot contain spaces"),
+    password: Yup.string()
+      .required("Password is required")
+      .min(6, "Password must be at least 6 characters"),
+    role: Yup.string().required("Role is required"),
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(validationSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      username: "",
+      password: "",
+      role: "resident",
+    },
+  });
+
+  const onSubmit = async (data) => {
     try {
-      const response = await axios.post("/users/register", formData);
+      const response = await axios.post("/users/register", data);
       const { token } = response.data;
-
-      // Optional: Save token after registration
       localStorage.setItem("token", token);
-
-      alert("Registration successful!");
+      toast.success("Registration successful!");
       navigate("/login");
     } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong");
+      toast.error(err.response?.data?.message || "Something went wrong");
     }
   };
 
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100">
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(onSubmit)}
         className="bg-white p-8 rounded shadow-md w-96"
+        noValidate
       >
         <h2 className="text-2xl font-bold mb-4">Register</h2>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
+
         <input
           type="text"
-          name="name"
           placeholder="Name"
-          value={formData.name}
-          onChange={handleChange}
-          className="w-full p-2 mb-4 border rounded"
-          required
+          {...register("name")}
+          className={`w-full p-2 mb-1 border rounded ${
+            errors.name ? "border-red-500" : "border-gray-300"
+          }`}
         />
+        {errors.name && (
+          <p className="text-red-500 mb-2 text-sm">{errors.name.message}</p>
+        )}
+
         <input
           type="email"
-          name="email"
           placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          className="w-full p-2 mb-4 border rounded"
-          required
+          {...register("email")}
+          className={`w-full p-2 mb-1 border rounded ${
+            errors.email ? "border-red-500" : "border-gray-300"
+          }`}
         />
+        {errors.email && (
+          <p className="text-red-500 mb-2 text-sm">{errors.email.message}</p>
+        )}
+
         <input
           type="text"
-          name="username"
           placeholder="Username"
-          value={formData.username}
-          onChange={handleChange}
-          className="w-full p-2 mb-4 border rounded"
-          required
+          {...register("username")}
+          className={`w-full p-2 mb-1 border rounded ${
+            errors.username ? "border-red-500" : "border-gray-300"
+          }`}
         />
+        {errors.username && (
+          <p className="text-red-500 mb-2 text-sm">{errors.username.message}</p>
+        )}
+
         <input
           type="password"
-          name="password"
           placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          className="w-full p-2 mb-4 border rounded"
-          required
+          {...register("password")}
+          className={`w-full p-2 mb-1 border rounded ${
+            errors.password ? "border-red-500" : "border-gray-300"
+          }`}
         />
+        {errors.password && (
+          <p className="text-red-500 mb-2 text-sm">{errors.password.message}</p>
+        )}
+
         <select
-          name="role"
-          value={formData.role}
-          onChange={handleChange}
-          className="w-full p-2 mb-4 border rounded"
+          {...register("role")}
+          className={`w-full p-2 mb-4 border rounded ${
+            errors.role ? "border-red-500" : "border-gray-300"
+          }`}
         >
           <option value="resident">Resident</option>
           <option value="staff">Staff</option>
           <option value="admin">Admin</option>
-          <option value="staff">Staff</option>
         </select>
+
         <button
           type="submit"
           className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"

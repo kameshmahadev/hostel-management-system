@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getAllBills, deleteBill } from '../api/billingApi';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';  // <-- Added import
 
 const BillList = () => {
   const [bills, setBills] = useState([]);
@@ -30,9 +31,10 @@ const BillList = () => {
     if (window.confirm('Are you sure you want to delete this bill?')) {
       try {
         await deleteBill(id);
+        toast.success('Bill deleted successfully');  // <-- Show success toast
         loadBills();
       } catch (err) {
-        alert('Failed to delete bill.');
+        toast.error('Failed to delete bill.');  // <-- Show error toast
       }
     }
   };
@@ -61,7 +63,7 @@ const BillList = () => {
           {bills.map(bill => (
             <tr key={bill._id}>
               <td>{bill.resident?.name || 'N/A'}</td>
-              <td>${bill.amount}</td>
+              <td>₹{bill.amount}</td> {/* Changed $ to ₹ for consistency */}
               <td>{bill.status}</td>
               <td>{bill.dueDate ? new Date(bill.dueDate).toLocaleDateString() : 'N/A'}</td>
               <td>

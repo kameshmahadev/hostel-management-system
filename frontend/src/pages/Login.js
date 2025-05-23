@@ -1,70 +1,62 @@
-// src/pages/Login.js
-import { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
-import { AuthContext } from '../context/AuthContext';
+import React from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as Yup from "yup";
+import axios from "../service/api";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const Login = () => {
-  const { setUser } = useContext(AuthContext);
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleChange = e => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const validationSchema = Yup.object().shape({
+    username: Yup.string().required("Username is required"),
+    password: Yup.string().required("Password is required"),
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(validationSchema),
+  });
 
+  const onSubmit = async (data) => {
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
-        email: formData.email,
-        password: formData.password,
-      });
-
-      const { token } = res.data;
-      localStorage.setItem("token", token); // Keep this line to store the raw token
-
-      const decoded = jwtDecode(token);
-
-      // --- CRITICAL CHANGE HERE ---
-      // Store both the decoded user info AND the token itself in the user object
-      setUser({ ...decoded, token }); // Add the token to the user object
-      // --- END CRITICAL CHANGE ---
-
+      const response = await axios.post("/users/login", data);
+      const { token, user } = response.data;
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+      toast.success("Login successful!");
       navigate("/dashboard");
-    } catch (err) {
-      console.error("Login failed", err);
-      setError("Invalid credentials");
+    } catch (error) {
+      const message = error.response?.data?.message || "Login failed";
+      toast.error(message);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md w-96">
-        <h2 className="text-2xl mb-4 font-semibold text-center">Login</h2>
-        {error && <div className="text-red-500 mb-2">{error}</div>}
+    <div className="flex justify-center items-center h-screen bg-gray-100">
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-white p-8 rounded shadow-md w-96">
+        <h2 className="text-2xl font-bold mb-4">Login</h2>
         <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          className="w-full mb-3 px-3 py-2 border rounded"
-          value={formData.email}
-          onChange={handleChange}
-          required
+          type="text"
+          placeholder="Username"
+          {...register("username")}
+          className={`w-full p-2 mb-1 border rounded ${errors.username ? "border-red-500" : "border-gray-300"}`}
         />
+        {errors.username && <p className="text-red-500 text-sm mb-2">{errors.username.message}</p>}
+
         <input
           type="password"
-          name="password"
           placeholder="Password"
-          className="w-full mb-3 px-3 py-2 border rounded"
-          value={formData.password}
-          onChange={handleChange}
-          required
+          {...register("password")}
+          className={`w-full p-2 mb-1 border rounded ${errors.password ? "border-red-500" : "border-gray-300"}`}
         />
-        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+        {errors.password && <p className="text-red-500 text-sm mb-2">{errors.password.message}</p>}
+
+        <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
           Login
         </button>
       </form>

@@ -1,29 +1,40 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
+
   return (
-    <nav className="bg-blue-500 text-white p-4">
-      <div className="container mx-auto flex justify-between items-center">
-        <h1 className="text-xl font-bold">Hostel Management System</h1>
-        <div>
-          <Link to="/dashboard" className="mr-4 hover:underline">
-            Dashboard
-          </Link>
-          <Link to="/rooms" className="mr-4 hover:underline">
-            Rooms
-          </Link>
-          <Link to="/bookings" className="mr-4 hover:underline">
-            Bookings
-          </Link>
-          <Link to="/maintenance" className="mr-4 hover:underline">
-            Maintenance
-          </Link>
-          <Link to="/billing" className="hover:underline">
-            Billing
-          </Link>
-        </div>
+    <nav className="bg-blue-700 text-white px-4 py-3 flex justify-between items-center">
+      <div className="flex gap-6 font-semibold">
+        <NavLink to="/dashboard/home" className={({ isActive }) => isActive ? 'underline' : ''}>
+          Dashboard
+        </NavLink>
+        <NavLink to="/dashboard/rooms" className={({ isActive }) => isActive ? 'underline' : ''}>
+          Rooms
+        </NavLink>
+        <NavLink to="/dashboard/bookings" className={({ isActive }) => isActive ? 'underline' : ''}>
+          Bookings
+        </NavLink>
+        <NavLink to="/dashboard/maintenance" className={({ isActive }) => isActive ? 'underline' : ''}>
+          Maintenance
+        </NavLink>
+        <NavLink to="/dashboard/billing" className={({ isActive }) => isActive ? 'underline' : ''}>
+          Billing
+        </NavLink>
       </div>
+
+      <button
+        onClick={handleLogout}
+        className="bg-red-500 px-4 py-1 rounded hover:bg-red-600"
+      >
+        Logout
+      </button>
     </nav>
   );
 };

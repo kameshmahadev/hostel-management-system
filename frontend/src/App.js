@@ -1,25 +1,27 @@
 import React, { useContext } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { ErrorBoundary } from 'react-error-boundary';
 
 import Register from './pages/Register';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
+import DashboardHome from './pages/DashboardHome';
+import Rooms from './pages/Rooms';
 import Bookings from './pages/Bookings';
 import Maintenance from './pages/Maintenance';
 import Billing from './pages/Billing';
-import Rooms from './pages/Rooms'; // <--- THIS IS THE CORRECT IMPORT FOR Rooms
-// Removed 'AddRoomForm' import as it's now used inside Rooms.js directly.
 import BillList from './components/BillList';
 import CreateBill from './components/CreateBill';
 import EditBill from './components/EditBill';
+import AdminPage from './pages/AdminPage';
 import { AuthContext } from './context/AuthContext';
+import Navbar from './components/Navbar';
+import ErrorFallback from './components/ErrorFallback';
 
-
-// ProtectedRoute component (restored the 403 Forbidden UI)
 const ProtectedRoute = ({ children, role }) => {
   const { user } = useContext(AuthContext);
 
-  if (!user) return <Navigate to="/login" />;
+  if (!user) return <Navigate to="/login" replace />;
   if (role && user.role !== role) {
     return (
       <div className="p-10 text-center">
@@ -32,107 +34,76 @@ const ProtectedRoute = ({ children, role }) => {
   return children;
 };
 
-const App = () => {
-  return (
-    <Router>
+const DashboardLayout = () => (
+  <>
+    <Navbar />
+    <div className="p-4">
+      <Outlet />
+    </div>
+  </>
+);
+
+const App = () => (
+  <Router>
+    <Toaster position="top-right" />
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
       <Routes>
         {/* Public routes */}
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Protected routes */}
+        {/* Protected Dashboard Routes */}
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <DashboardLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<DashboardHome />} />
+          <Route path="home" element={<DashboardHome />} />
+          <Route path="rooms" element={<Rooms />} />
+          <Route path="bookings" element={<Bookings />} />
+          <Route path="maintenance" element={<Maintenance />} />
+          <Route path="billing" element={<Billing />} />
+          <Route path="bills" element={<BillList />} />
+          <Route path="bills/new" element={<CreateBill />} />
+          <Route path="bills/edit/:id" element={<EditBill />} />
 
-        <Route
-          path="/rooms"
-          element={
-            <ProtectedRoute>
-              <Rooms /> {/* Renders the Rooms page which includes the AddRoomForm */}
-            </ProtectedRoute>
-          }
-        />
+          {/* Admin-only route */}
+          <Route
+            path="admin-only"
+            element={
+              <ProtectedRoute role="admin">
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Since AddRoomForm is now integrated into Rooms.js,
-            you no longer need a separate route for it.
-            You can remove this block entirely.
-        */}
-        {/*
-        <Route
-          path="/add-room"
-          element={
-            <ProtectedRoute>
-              <AddRoomForm />
-            </ProtectedRoute>
-          }
-        />
-        */}
+          {/* Nested 404 within dashboard */}
+          <Route
+            path="*"
+            element={
+              <div className="p-10 text-center">
+                <h1 className="text-3xl font-bold text-red-600">404 - Page Not Found</h1>
+                <p className="mt-4 text-gray-600">The requested page does not exist.</p>
+              </div>
+            }
+          />
+        </Route>
 
+        {/* Global 404 */}
         <Route
-          path="/bookings"
+          path="*"
           element={
-            <ProtectedRoute>
-              <Bookings />
-            </ProtectedRoute>
+            <h1 className="text-center mt-10 text-3xl font-bold text-red-600">404 - Page Not Found</h1>
           }
         />
-
-        <Route
-          path="/maintenance"
-          element={
-            <ProtectedRoute>
-              <Maintenance />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/billing"
-          element={
-            <ProtectedRoute>
-              <Billing />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* NEW BILLING ROUTES */}
-        <Route
-          path="/bills"
-          element={
-            <ProtectedRoute>
-              <BillList />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/bills/new"
-          element={
-            <ProtectedRoute>
-              <CreateBill />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/bills/edit/:id"
-          element={
-            <ProtectedRoute>
-              <EditBill />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* 404 page */}
-        <Route path="*" element={<h1 className="text-center mt-10">404 - Page Not Found</h1>} />
       </Routes>
-    </Router>
-  );
-};
+    </ErrorBoundary>
+  </Router>
+);
 
 export default App;
