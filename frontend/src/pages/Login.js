@@ -1,7 +1,8 @@
+// src/pages/Login.js
 import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode'; // ✅ Correct import
+import { jwtDecode } from 'jwt-decode';
 import { AuthContext } from '../context/AuthContext';
 
 const Login = () => {
@@ -24,9 +25,15 @@ const Login = () => {
       });
 
       const { token } = res.data;
-      localStorage.setItem("token", token);
-      const decoded = jwtDecode(token); // ✅ Correct usage
-      setUser(decoded);
+      localStorage.setItem("token", token); // Keep this line to store the raw token
+
+      const decoded = jwtDecode(token);
+
+      // --- CRITICAL CHANGE HERE ---
+      // Store both the decoded user info AND the token itself in the user object
+      setUser({ ...decoded, token }); // Add the token to the user object
+      // --- END CRITICAL CHANGE ---
+
       navigate("/dashboard");
     } catch (err) {
       console.error("Login failed", err);

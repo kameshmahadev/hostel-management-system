@@ -1,38 +1,30 @@
 const Maintenance = require('../models/Maintenance');
+const AppError = require('../utils/AppError');
 
-// GET - All maintenance requests
-const getAllMaintenance = async (req, res) => {
+const getAllMaintenance = async (req, res, next) => {
   try {
-    const query = req.user.role === 'resident'
-      ? { resident: req.user._id }
-      : {}; // Admin/Staff see all
-
+    const query = req.user.role === 'resident' ? { resident: req.user._id } : {};
     const maintenanceList = await Maintenance.find(query)
       .populate('resident', 'name email')
       .populate('room', 'number');
 
     res.json(maintenanceList);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching maintenance requests' });
+  } catch (err) {
+    next(err);
   }
 };
 
-// PUT - Update maintenance status or info
-const updateMaintenance = async (req, res) => {
+const updateMaintenance = async (req, res, next) => {
   try {
     const maintenance = await Maintenance.findById(req.params.id);
+    if (!maintenance) return next(new AppError('Maintenance request not found', 404));
 
-    if (!maintenance) {
-      return res.status(404).json({ message: 'Maintenance request not found' });
-    }
-
-    // Only admin/staff or the owner can update
     if (
       req.user.role !== 'admin' &&
       req.user.role !== 'staff' &&
       req.user._id.toString() !== maintenance.resident.toString()
     ) {
-      return res.status(403).json({ message: 'Unauthorized to update this request' });
+      return next(new AppError('Unauthorized to update this request', 403));
     }
 
     const { issue, priority, status } = req.body;
@@ -42,34 +34,43 @@ const updateMaintenance = async (req, res) => {
 
     const updated = await maintenance.save();
     res.json({ message: 'Request status updated', maintenance: updated });
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating maintenance request' });
+  } catch (err) {
+    next(err);
   }
 };
 
-// DELETE - Delete a maintenance request
-const deleteMaintenance = async (req, res) => {
+const deleteMaintenance = async (req, res, next) => {
   try {
     const maintenance = await Maintenance.findById(req.params.id);
+    if (!maintenance) return next(new AppError('Maintenance request not found', 404));
 
-    if (!maintenance) {
-      return res.status(404).json({ message: 'Maintenance request not found' });
-    }
-
-    // Only admin/staff or the owner can delete
     if (
       req.user.role !== 'admin' &&
       req.user.role !== 'staff' &&
       req.user._id.toString() !== maintenance.resident.toString()
     ) {
-      return res.status(403).json({ message: 'Unauthorized to delete this request' });
+      return next(new AppError('Unauthorized to delete this request', 403));
     }
 
     await maintenance.deleteOne();
     res.json({ message: 'Maintenance request deleted successfully' });
-  } catch (error) {
-    console.error('DELETE error:', error.message);
-    res.status(500).json({ message: 'Error deleting maintenance request' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const createMaintenance = async (req, res, next) => {
+  try {
+    const { room, issue, priority } = req.body;
+    const newRequest = await Maintenance.create({
+      resident: req.user._id,
+      room,
+      issue,
+      priority,
+    });
+    res.status(201).json(newRequest);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -77,18 +78,5 @@ module.exports = {
   getAllMaintenance,
   updateMaintenance,
   deleteMaintenance,
-  createMaintenance: async (req, res) => {
-    try {
-      const { room, issue, priority } = req.body;
-      const newRequest = await Maintenance.create({
-        resident: req.user._id,
-        room,
-        issue,
-        priority,
-      });
-      res.status(201).json(newRequest);
-    } catch (error) {
-      res.status(500).json({ message: 'Error creating maintenance request' });
-    }
-  }
+  createMaintenance,
 };
