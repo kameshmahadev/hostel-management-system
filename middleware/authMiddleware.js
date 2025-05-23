@@ -1,57 +1,38 @@
-// backend/middleware/authMiddleware.js
+const express = require('express');
+const router = express.Router();
+// Assuming you have middleware for authentication/authorization
+const { protect, authorizeRoles } = require('../middleware/authMiddleware'); // <--- CHANGED HERE: authorize to authorizeRoles
 
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+// Import the room controller functions
+const {
+  getRooms,
+  addRoom,
+  updateRoom,
+  deleteRoom,
+} = require('../controllers/roomController');
 
-// Middleware to check if the user is authenticated
-const protect = async (req, res, next) => {
-  let token;
+// You don't need to require Resident model here if it's imported in the controller/model
+// require('../models/Resident');
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
-    try {
-      token = req.headers.authorization.split(' ')[1];
-      console.log('🔑 Token received:', token);
 
-      // Verify the token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log('✅ Token decoded:', decoded);
+// Routes
+// Apply 'protect' middleware to all room routes that require authentication
+// Apply 'authorizeRoles' middleware for role-based access control (e.g., only admin/staff can add/delete/update)
 
-      req.user = await User.findById(decoded.id).select('-password');
-      console.log('👤 Authenticated user:', req.user);
+// GET all rooms (e.g., accessible to all authenticated users)
+router.get('/', protect, getRooms);
 
-      if (!req.user) {
-        return res.status(401).json({ message: 'Not authorized, user not found' });
-      }
+// CREATE a new room (e.g., only accessible to admin/staff)
+router.post('/', protect, authorizeRoles(['admin', 'staff']), addRoom); // <--- authorizeRoles used here
 
-      next();
-    } catch (error) {
-      console.error('❌ JWT Error:', error.message);
-      if (error.message === 'invalid signature') {
-        return res.status(401).json({ message: 'Invalid token signature' });
-      }
-      return res.status(401).json({ message: 'Not authorized, token failed' });
-    }
-  } else {
-    return res.status(401).json({ message: 'Not authorized, no token' });
-  }
-};
+// GET single room
+router.get('/:id', protect, getRooms); // Reusing getRooms, might need a getRoomById in controller
 
-// ✅ Middleware to restrict by role
-const authorizeRoles = (...roles) => {
-  return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      console.log('❌ Access denied: insufficient permissions'); // Log insufficient permissions
-      return res.status(403).json({ message: 'Access denied: insufficient permissions' });
-    }
-    next();
-  };
-};
+// UPDATE a room (e.g., only accessible to admin/staff)
+router.put('/:id', protect, authorizeRoles(['admin', 'staff']), updateRoom); // <--- authorizeRoles used here
 
-// ✅ Export both
-module.exports = {
-  protect,
-  authorizeRoles
-};
+// DELETE a room (e.g., only accessible to admin/staff)
+router.delete('/:id', protect, authorizeRoles(['admin', 'staff']), deleteRoom); // <--- authorizeRoles used here
+
+
+module.exports = router;
