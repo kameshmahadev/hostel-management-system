@@ -7,19 +7,27 @@ import Dashboard from './pages/Dashboard';
 import Bookings from './pages/Bookings';
 import Maintenance from './pages/Maintenance';
 import Billing from './pages/Billing';
-import RoomsList from './components/RoomsList';
-import AddRoom from './components/AddRoom';
+import Rooms from './pages/Rooms'; // <--- THIS IS THE CORRECT IMPORT FOR Rooms
+// Removed 'AddRoomForm' import as it's now used inside Rooms.js directly.
 import BillList from './components/BillList';
 import CreateBill from './components/CreateBill';
 import EditBill from './components/EditBill';
 import { AuthContext } from './context/AuthContext';
 
-// ProtectedRoute component
+
+// ProtectedRoute component (restored the 403 Forbidden UI)
 const ProtectedRoute = ({ children, role }) => {
   const { user } = useContext(AuthContext);
 
   if (!user) return <Navigate to="/login" />;
-  if (role && user.role !== role) return <Navigate to="/dashboard" />;
+  if (role && user.role !== role) {
+    return (
+      <div className="p-10 text-center">
+        <h1 className="text-3xl font-bold text-red-600">403 - Forbidden</h1>
+        <p className="mt-4 text-gray-600">You do not have permission to access this page.</p>
+      </div>
+    );
+  }
 
   return children;
 };
@@ -46,20 +54,26 @@ const App = () => {
         <Route
           path="/rooms"
           element={
-            <ProtectedRoute role="admin">
-              <RoomsList />
+            <ProtectedRoute>
+              <Rooms /> {/* Renders the Rooms page which includes the AddRoomForm */}
             </ProtectedRoute>
           }
         />
 
+        {/* Since AddRoomForm is now integrated into Rooms.js,
+            you no longer need a separate route for it.
+            You can remove this block entirely.
+        */}
+        {/*
         <Route
           path="/add-room"
           element={
-            <ProtectedRoute role="admin">
-              <AddRoom />
+            <ProtectedRoute>
+              <AddRoomForm />
             </ProtectedRoute>
           }
         />
+        */}
 
         <Route
           path="/bookings"
@@ -88,7 +102,7 @@ const App = () => {
           }
         />
 
-        {/* ✅ NEW BILLING ROUTES */}
+        {/* NEW BILLING ROUTES */}
         <Route
           path="/bills"
           element={

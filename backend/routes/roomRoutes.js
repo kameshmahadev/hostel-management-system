@@ -1,63 +1,38 @@
 const express = require('express');
 const router = express.Router();
+// Assuming you have middleware for authentication/authorization
+const { protect, authorize } = require('../middleware/authMiddleware'); // <--- ADD THIS LINE if you have auth middleware
 
-// ✅ Add this line to register the Resident model before using it in populate()
-require('../models/Resident');
+// Import the room controller functions
+const {
+  getRooms,
+  addRoom,
+  updateRoom,
+  deleteRoom,
+} = require('../controllers/roomController');
 
-const Room = require('../models/Room');
+// You don't need to require Resident model here if it's imported in the controller/model
+// require('../models/Resident'); // If 'Resident' model is separate from 'User'
 
-// CREATE a new room
-router.post('/', async (req, res) => {
-  try {
-    const room = new Room(req.body);
-    const savedRoom = await room.save();
-    res.status(201).json(savedRoom);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
 
-// READ all rooms
-router.get('/', async (req, res) => {
-  try {
-    const rooms = await Room.find().populate('currentResident', 'name email');
-    res.status(200).json(rooms);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
+// Routes
+// Apply 'protect' middleware to all room routes that require authentication
+// Apply 'authorize' middleware for role-based access control (e.g., only admin/staff can add/delete/update)
 
-// READ single room
-router.get('/:id', async (req, res) => {
-  try {
-    const room = await Room.findById(req.params.id).populate('currentResident');
-    if (!room) return res.status(404).json({ message: 'Room not found' });
-    res.status(200).json(room);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
+// GET all rooms (e.g., accessible to all authenticated users)
+router.get('/', protect, getRooms);
 
-// UPDATE a room
-router.put('/:id', async (req, res) => {
-  try {
-    const updatedRoom = await Room.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updatedRoom) return res.status(404).json({ message: 'Room not found' });
-    res.status(200).json(updatedRoom);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
+// CREATE a new room (e.g., only accessible to admin/staff)
+router.post('/', protect, authorize(['admin', 'staff']), addRoom);
 
-// DELETE a room
-router.delete('/:id', async (req, res) => {
-  try {
-    const deletedRoom = await Room.findByIdAndDelete(req.params.id);
-    if (!deletedRoom) return res.status(404).json({ message: 'Room not found' });
-    res.status(200).json({ message: 'Room deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
+// GET single room
+router.get('/:id', protect, getRooms); // Reusing getRooms, might need a getRoomById in controller
+
+// UPDATE a room (e.g., only accessible to admin/staff)
+router.put('/:id', protect, authorize(['admin', 'staff']), updateRoom);
+
+// DELETE a room (e.g., only accessible to admin/staff)
+router.delete('/:id', protect, authorize(['admin', 'staff']), deleteRoom);
+
 
 module.exports = router;

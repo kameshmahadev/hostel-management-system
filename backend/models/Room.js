@@ -3,31 +3,57 @@ const mongoose = require('mongoose');
 const roomSchema = new mongoose.Schema({
   number: {
     type: String,
-    required: [true, 'Room number is required'], // Validation for 'number'
+    required: [true, 'Room number is required'],
     unique: true, // Ensures room numbers are unique
+    trim: true // Removes whitespace from both ends of a string
   },
   type: {
     type: String,
     required: [true, 'Room type is required'],
-    enum: ['Single', 'Double', 'Suite'], // Restrict room types to specific values
+    // Align with your frontend's dropdown options
+    enum: ['Standard', 'Deluxe', 'Suite', 'Dormitory'],
+    default: 'Standard' // Set a default type
+  },
+  capacity: { // New field for capacity
+    type: Number,
+    required: [true, 'Room capacity is required'],
+    min: [1, 'Capacity must be at least 1'],
   },
   price: {
     type: Number,
     required: [true, 'Room price is required'],
-    min: [0, 'Price must be a positive number'], // Ensure price is non-negative
+    min: [0, 'Price must be a non-negative number'], // Allow 0, though >0 usually implied for booking
   },
-  occupied: {
-    type: Boolean,
-    default: false, // Default value is false
+  // Use 'status' as the primary indicator, and 'occupied' can be derived or a secondary flag
+  status: {
+    type: String,
+    enum: ['Available', 'Occupied', 'Under Maintenance'],
+    default: 'Available',
+    required: true,
   },
-  currentResident: {
+  // If you still want 'occupied' as a separate boolean for clarity,
+  // ensure its value is consistent with 'status' when saving.
+  // For simplicity, I'd recommend relying primarily on 'status'.
+  // occupied: {
+  //   type: Boolean,
+  //   default: false,
+  // },
+  currentResident: { // Link to the Resident model (assuming you have one)
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Resident', // Reference to the Resident model
+    ref: 'User', // Assuming 'User' is your resident model, if 'Resident' exists, use 'Resident'
+    default: null,
+  },
+  checkInDate: {
+    type: Date,
+    default: null,
+  },
+  checkOutDate: {
+    type: Date,
     default: null,
   },
   createdAt: {
     type: Date,
-    default: Date.now, // Automatically set the creation date
+    default: Date.now,
   },
 });
 
