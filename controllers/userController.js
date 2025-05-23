@@ -1,75 +1,83 @@
-// controllers/userController.js
-const User = require('../models/User');
+// backend/controllers/userController.js
+const User = require('../models/User'); // Assuming your user model is named User
+const AppError = require('../utils/AppError');
 
-// GET: Get all users (Admin only)
-const getAllUsers = async (req, res) => {
+// Get all users
+const getAllUsers = async (req, res, next) => {
   try {
-    const users = await User.find().select('-password');
-    res.json(users);
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch users', error: err.message });
+    const users = await User.find().select('-password'); // Exclude passwords
+    res.status(200).json(users);
+  } catch (error) {
+    next(new AppError('Failed to fetch users', 500));
   }
 };
 
-// GET: Get a single user by ID (Admin or self)
-const getUserById = async (req, res) => {
+// Get user by ID
+const getUserById = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    // Only admin or self can view
-    if (req.user.role !== 'admin' && req.user._id.toString() !== user._id.toString()) {
-      return res.status(403).json({ message: 'Unauthorized access' });
+    if (!user) {
+      return next(new AppError('User not found', 404));
     }
-
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch user', error: err.message });
+    res.status(200).json(user);
+  } catch (error) {
+    // Handle invalid ObjectId format
+    if (error.kind === 'ObjectId') {
+        return next(new AppError('Invalid User ID format.', 400));
+    }
+    next(new AppError(`Failed to fetch user: ${error.message}`, 500));
   }
 };
 
-// PUT: Update user profile (Admin or self)
-const updateUser = async (req, res) => {
+// Update user
+const updateUser = async (req, res, next) => {
   try {
+    const { username, email, role } = req.body;
     const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Only admin or self can update
-    if (req.user.role !== 'admin' && req.user._id.toString() !== user._id.toString()) {
-      return res.status(403).json({ message: 'Unauthorized to update this user' });
+    if (!user) {
+      return next(new AppError('User not found', 404));
     }
 
-    const { name, email, phone, role } = req.body;
+    // Update user fields
+    user.username = username || user.username;
+    user.email = email || user.email;
+    user.role = role || user.role;
 
-    if (name) user.name = name;
-    if (email) user.email = email;
-    if (phone) user.phone = phone;
-    if (req.user.role === 'admin' && role) user.role = role;
-
-    const updated = await user.save();
-    res.json({ message: 'User updated', user: updated });
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to update user', error: err.message });
+    const updatedUser = await user.save();
+    res.status(200).json({
+      _id: updatedUser._id,
+      username: updatedUser.username,
+      email: updatedUser.email,
+      role: updatedUser.role,
+    });
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(val => val.message);
+      return next(new AppError(`Validation error: ${messages.join(', ')}`, 400));
+    }
+    if (error.code === 11000) { // Duplicate key error (e.g., email already exists)
+      return next(new AppError('A user with this email already exists.', 400));
+    }
+    next(new AppError(`Failed to update user: ${error.message}`, 500));
   }
 };
 
-// Delete a user
-const deleteUser = async (req, res) => {
+// Delete user
+const deleteUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return next(new AppError('User not found', 404));
     }
 
-    await User.deleteOne({ _id: req.params.id }); // ✅ Fix: use static method instead of instance method
-
-    res.json({ message: 'User deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to delete user', error: err.message });
+    await user.deleteOne(); // Mongoose 5.x/6.x uses .deleteOne() for instance deletion
+    res.status(200).json({ message: 'User removed' });
+  } catch (error) {
+    next(new AppError(`Failed to delete user: ${error.message}`, 500));
   }
 };
-
 
 module.exports = {
   getAllUsers,

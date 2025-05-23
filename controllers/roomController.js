@@ -1,58 +1,55 @@
 const Room = require('../models/Room');
 const User = require('../models/User');
+const AppError = require('../utils/AppError');
 
 // Fetch all rooms
-const getRooms = async (req, res) => {
+const getRooms = async (req, res, next) => {
   try {
     const rooms = await Room.find().populate('currentResident', 'name email');
     res.status(200).json(rooms);
   } catch (error) {
-    console.error('Error fetching rooms:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(new AppError('Error fetching rooms', 500, error.message));
   }
 };
 
 // Fetch a single room by ID
-const getRoomById = async (req, res) => { // <--- NEW FUNCTION
+const getRoomById = async (req, res, next) => {
   try {
     const room = await Room.findById(req.params.id).populate('currentResident', 'name email');
-    if (!room) {
-      return res.status(404).json({ message: 'Room not found' });
-    }
+    if (!room) throw new AppError('Room not found', 404);
     res.status(200).json(room);
   } catch (error) {
-    console.error('Error fetching single room:', error);
-    // Handle invalid ObjectId format
     if (error.kind === 'ObjectId') {
-        return res.status(400).json({ message: 'Invalid Room ID format.' });
+      return next(new AppError('Invalid Room ID format', 400));
     }
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(new AppError('Error fetching room', 500, error.message));
   }
 };
 
-
 // Add a new room
-const addRoom = async (req, res) => {
-  // ... (your existing addRoom logic)
+const addRoom = async (req, res, next) => {
   try {
     const { number, type, capacity, price, occupied } = req.body;
+
     if (!number || !type || !capacity || !price) {
-      return res.status(400).json({ message: 'All required fields (number, type, capacity, price) are missing.' });
+      throw new AppError('All required fields (number, type, capacity, price) are missing.', 400);
     }
+
     if (isNaN(capacity) || capacity < 1) {
-      return res.status(400).json({ message: 'Capacity must be a positive number.' });
+      throw new AppError('Capacity must be a positive number.', 400);
     }
+
     if (isNaN(price) || price < 0) {
-      return res.status(400).json({ message: 'Price must be a non-negative number.' });
+      throw new AppError('Price must be a non-negative number.', 400);
     }
+
     const existingRoom = await Room.findOne({ number });
     if (existingRoom) {
-      return res.status(400).json({ message: `Room number ${number} already exists.` });
+      throw new AppError(`Room number ${number} already exists.`, 400);
     }
-    let initialStatus = 'Available';
-    if (typeof occupied === 'boolean') {
-      initialStatus = occupied ? 'Occupied' : 'Available';
-    }
+
+    let initialStatus = occupied === true ? 'Occupied' : 'Available';
+
     const newRoom = new Room({
       number,
       type,
@@ -60,88 +57,88 @@ const addRoom = async (req, res) => {
       price,
       status: initialStatus,
     });
+
     const savedRoom = await newRoom.save();
     res.status(201).json({ message: 'Room added successfully', room: savedRoom });
   } catch (error) {
-    console.error('Error adding room:', error);
     if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map(val => val.message);
-      return res.status(400).json({ message: messages.join(', ') });
+      const messages = Object.values(error.errors).map(val => val.message).join(', ');
+      return next(new AppError(messages, 400));
     }
     if (error.code === 11000) {
-        return res.status(400).json({ message: `Duplicate key error: Room number ${req.body.number} already exists.` });
+      return next(new AppError(`Duplicate key error: Room number ${req.body.number} already exists.`, 400));
     }
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(new AppError('Error adding room', 500, error.message));
   }
 };
 
 // Update room details
-const updateRoom = async (req, res) => {
-  // ... (your existing updateRoom logic)
+const updateRoom = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { type, capacity, price, status, currentResident, checkInDate, checkOutDate } = req.body;
+
     if (capacity && (isNaN(capacity) || capacity < 1)) {
-        return res.status(400).json({ message: 'Capacity must be a positive number.' });
+      throw new AppError('Capacity must be a positive number.', 400);
     }
+
     if (price && (isNaN(price) || price < 0)) {
-        return res.status(400).json({ message: 'Price must be a non-negative number.' });
+      throw new AppError('Price must be a non-negative number.', 400);
     }
+
     if (status && !['Available', 'Occupied', 'Under Maintenance'].includes(status)) {
-        return res.status(400).json({ message: 'Invalid room status.' });
+      throw new AppError('Invalid room status.', 400);
     }
+
     const roomUpdates = { type, capacity, price, status };
+
     if (currentResident !== undefined) {
-        if (currentResident === null) {
-            roomUpdates.currentResident = null;
-            roomUpdates.status = 'Available';
-            roomUpdates.checkOutDate = new Date();
-        } else {
-            const residentExists = await User.findById(currentResident);
-            if (!residentExists) {
-                return res.status(400).json({ message: 'Resident not found.' });
-            }
-            roomUpdates.currentResident = currentResident;
-            roomUpdates.status = 'Occupied';
-            roomUpdates.checkInDate = new Date();
-            roomUpdates.checkOutDate = null;
+      if (currentResident === null) {
+        roomUpdates.currentResident = null;
+        roomUpdates.status = 'Available';
+        roomUpdates.checkOutDate = new Date();
+      } else {
+        const residentExists = await User.findById(currentResident);
+        if (!residentExists) {
+          throw new AppError('Resident not found.', 400);
         }
+        roomUpdates.currentResident = currentResident;
+        roomUpdates.status = 'Occupied';
+        roomUpdates.checkInDate = new Date();
+        roomUpdates.checkOutDate = null;
+      }
     }
+
     if (checkInDate) roomUpdates.checkInDate = new Date(checkInDate);
     if (checkOutDate) roomUpdates.checkOutDate = new Date(checkOutDate);
-    const updatedRoom = await Room.findByIdAndUpdate(
-      id,
-      roomUpdates,
-      { new: true, runValidators: true }
-    ).populate('currentResident', 'name email');
-    if (!updatedRoom) {
-      return res.status(404).json({ message: 'Room not found' });
-    }
+
+    const updatedRoom = await Room.findByIdAndUpdate(id, roomUpdates, {
+      new: true,
+      runValidators: true
+    }).populate('currentResident', 'name email');
+
+    if (!updatedRoom) throw new AppError('Room not found', 404);
+
     res.status(200).json({ message: 'Room updated successfully', room: updatedRoom });
   } catch (error) {
-    console.error('Error updating room:', error);
     if (error.name === 'ValidationError') {
-        const messages = Object.values(error.errors).map(val => val.message);
-        return res.status(400).json({ message: messages.join(', ') });
+      const messages = Object.values(error.errors).map(val => val.message).join(', ');
+      return next(new AppError(messages, 400));
     }
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(new AppError('Error updating room', 500, error.message));
   }
 };
 
 // Delete a room
-const deleteRoom = async (req, res) => {
-  // ... (your existing deleteRoom logic)
+const deleteRoom = async (req, res, next) => {
   try {
     const { id } = req.params;
     const deletedRoom = await Room.findByIdAndDelete(id);
-    if (!deletedRoom) {
-      return res.status(404).json({ message: 'Room not found' });
-    }
+    if (!deletedRoom) throw new AppError('Room not found', 404);
     res.status(200).json({ message: 'Room deleted successfully' });
   } catch (error) {
-    console.error('Error deleting room:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(new AppError('Error deleting room', 500, error.message));
   }
 };
 
-module.exports = { getRooms, getRoomById, addRoom, updateRoom, deleteRoom }; // <--- EXPORT NEW FUNCTION
+module.exports = { getRooms, getRoomById, addRoom, updateRoom, deleteRoom };

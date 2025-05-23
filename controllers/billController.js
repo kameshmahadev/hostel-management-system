@@ -1,52 +1,40 @@
-// controllers/billController.js
-const Bill = require('../models/bill'); // ✅ FIXED import path
+const Bill = require('../models/Bill');
+const AppError = require('../utils/AppError');
 
-// Create a new bill
-const createBill = async (req, res) => {
+const createBill = async (req, res, next) => {
   try {
     const { resident, amount, dueDate, status, description } = req.body;
-
-    const newBill = await Bill.create({
-      resident,
-      amount,
-      dueDate,
-      status,
-      description,
-    });
-
+    const newBill = await Bill.create({ resident, amount, dueDate, status, description });
     res.status(201).json({ message: 'Bill created', bill: newBill });
   } catch (err) {
-    res.status(500).json({ message: 'Failed to create bill', error: err.message });
+    next(err);
   }
 };
 
-// Get all bills (admin/staff) or own bills (resident)
-const getBills = async (req, res) => {
+const getBills = async (req, res, next) => {
   try {
     const filter = req.user.role === 'resident' ? { resident: req.user._id } : {};
     const bills = await Bill.find(filter).populate('resident', 'name email');
     res.json(bills);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch bills', error: err.message });
+    next(err);
   }
 };
 
-// Get a single bill by ID
-const getBillById = async (req, res) => {
+const getBillById = async (req, res, next) => {
   try {
     const bill = await Bill.findById(req.params.id).populate('resident', 'name email');
-    if (!bill) return res.status(404).json({ message: 'Bill not found' });
+    if (!bill) return next(new AppError('Bill not found', 404));
     res.json(bill);
   } catch (err) {
-    res.status(500).json({ message: 'Error fetching bill', error: err.message });
+    next(err);
   }
 };
 
-// Update a bill
-const updateBill = async (req, res) => {
+const updateBill = async (req, res, next) => {
   try {
     const bill = await Bill.findById(req.params.id);
-    if (!bill) return res.status(404).json({ message: 'Bill not found' });
+    if (!bill) return next(new AppError('Bill not found', 404));
 
     const { amount, dueDate, status, description } = req.body;
 
@@ -58,20 +46,18 @@ const updateBill = async (req, res) => {
     const updated = await bill.save();
     res.json({ message: 'Bill updated', bill: updated });
   } catch (err) {
-    res.status(500).json({ message: 'Failed to update bill', error: err.message });
+    next(err);
   }
 };
 
-// Delete a bill
-const deleteBill = async (req, res) => {
+const deleteBill = async (req, res, next) => {
   try {
     const bill = await Bill.findById(req.params.id);
-    if (!bill) return res.status(404).json({ message: 'Bill not found' });
-
-    await Bill.deleteOne({ _id: bill._id });
+    if (!bill) return next(new AppError('Bill not found', 404));
+    await bill.deleteOne();
     res.json({ message: 'Bill deleted successfully' });
   } catch (err) {
-    res.status(500).json({ message: 'Failed to delete bill', error: err.message });
+    next(err);
   }
 };
 

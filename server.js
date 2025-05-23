@@ -6,6 +6,14 @@ const mongoose = require('mongoose');
 // Load environment variables
 dotenv.config();
 
+// App setup
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const roomRoutes = require('./routes/roomRoutes');
@@ -14,14 +22,7 @@ const userRoutes = require('./routes/userRoutes');
 const billRoutes = require('./routes/billRoutes');
 const maintenanceRoutes = require('./routes/maintenanceRoutes');
 
-const app = express();
-const PORT = process.env.PORT || 5000;
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// ✅ Route Registration
+// Route Registration
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/bookings', bookingRoutes);
@@ -33,6 +34,18 @@ app.use('/api/maintenance', maintenanceRoutes);
 app.get('/', (req, res) => {
   res.send('Welcome to the Hostel Management API');
 });
+
+// Error Utilities
+const AppError = require('./utils/AppError');
+const errorHandler = require('./middleware/ErrorHandler');
+
+// Handle Unmatched Routes
+app.use('*', (req, res, next) => {
+  next(new AppError('Route not found', 404));
+});
+
+// Global Error Handler
+app.use(errorHandler);
 
 // MongoDB Connection and Server Start
 mongoose
