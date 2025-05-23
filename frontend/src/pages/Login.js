@@ -10,7 +10,7 @@ const Login = () => {
   const navigate = useNavigate();
 
   const validationSchema = Yup.object().shape({
-    username: Yup.string().required("Username is required"),
+    email: Yup.string().required("Email is required").email("Invalid email"),
     password: Yup.string().required("Password is required"),
   });
 
@@ -24,7 +24,7 @@ const Login = () => {
 
   const onSubmit = async (data) => {
     try {
-      const response = await axios.post("/users/login", data);
+      const response = await axios.post("/auth/login", data); // ✅ corrected path
       const { token, user } = response.data;
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
@@ -40,13 +40,14 @@ const Login = () => {
     <div className="flex justify-center items-center h-screen bg-gray-100">
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white p-8 rounded shadow-md w-96">
         <h2 className="text-2xl font-bold mb-4">Login</h2>
+
         <input
-          type="text"
-          placeholder="Username"
-          {...register("username")}
-          className={`w-full p-2 mb-1 border rounded ${errors.username ? "border-red-500" : "border-gray-300"}`}
+          type="email"
+          placeholder="Email"
+          {...register("email")}
+          className={`w-full p-2 mb-1 border rounded ${errors.email ? "border-red-500" : "border-gray-300"}`}
         />
-        {errors.username && <p className="text-red-500 text-sm mb-2">{errors.username.message}</p>}
+        {errors.email && <p className="text-red-500 text-sm mb-2">{errors.email.message}</p>}
 
         <input
           type="password"
