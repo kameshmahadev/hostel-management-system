@@ -5,7 +5,7 @@ const AppError = require('../utils/AppError');
 // Fetch all rooms
 const getRooms = async (req, res, next) => {
   try {
-    const rooms = await Room.find().populate('currentResident', 'name email');
+    const rooms = await Room.find().populate('assignedResident', 'name email');
     res.status(200).json(rooms);
   } catch (error) {
     next(new AppError('Error fetching rooms', 500, error.message));
@@ -15,7 +15,7 @@ const getRooms = async (req, res, next) => {
 // Fetch a single room by ID
 const getRoomById = async (req, res, next) => {
   try {
-    const room = await Room.findById(req.params.id).populate('currentResident', 'name email');
+    const room = await Room.findById(req.params.id).populate('assignedResident', 'name email');
     if (!room) throw new AppError('Room not found', 404);
     res.status(200).json(room);
   } catch (error) {
@@ -76,7 +76,7 @@ const addRoom = async (req, res, next) => {
 const updateRoom = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { type, capacity, price, status, currentResident, checkInDate, checkOutDate } = req.body;
+    const { type, capacity, price, status, assignedResident, checkInDate, checkOutDate } = req.body;
 
     if (capacity && (isNaN(capacity) || capacity < 1)) {
       throw new AppError('Capacity must be a positive number.', 400);
@@ -92,17 +92,17 @@ const updateRoom = async (req, res, next) => {
 
     const roomUpdates = { type, capacity, price, status };
 
-    if (currentResident !== undefined) {
-      if (currentResident === null) {
-        roomUpdates.currentResident = null;
+    if (assignedResident !== undefined) {
+      if (assignedResident === null) {
+        roomUpdates.assignedResident = null;
         roomUpdates.status = 'Available';
         roomUpdates.checkOutDate = new Date();
       } else {
-        const residentExists = await User.findById(currentResident);
+        const residentExists = await User.findById(assignedResident);
         if (!residentExists) {
           throw new AppError('Resident not found.', 400);
         }
-        roomUpdates.currentResident = currentResident;
+        roomUpdates.assignedResident = assignedResident;
         roomUpdates.status = 'Occupied';
         roomUpdates.checkInDate = new Date();
         roomUpdates.checkOutDate = null;
@@ -115,7 +115,7 @@ const updateRoom = async (req, res, next) => {
     const updatedRoom = await Room.findByIdAndUpdate(id, roomUpdates, {
       new: true,
       runValidators: true
-    }).populate('currentResident', 'name email');
+    }).populate('assignedResident', 'name email');
 
     if (!updatedRoom) throw new AppError('Room not found', 404);
 
@@ -141,7 +141,7 @@ const deleteRoom = async (req, res, next) => {
   }
 };
 
-// ✅ Assign a room to a resident
+// Assign a room to a resident
 const assignRoom = async (req, res, next) => {
   try {
     const { id } = req.params; // Room ID
@@ -157,7 +157,7 @@ const assignRoom = async (req, res, next) => {
     const user = await User.findById(userId);
     if (!user) throw new AppError('User (Resident) not found', 404);
 
-    room.currentResident = userId;
+    room.assignedResident = userId;
     room.status = 'Occupied';
     room.checkInDate = new Date();
     room.checkOutDate = null;
@@ -176,5 +176,5 @@ module.exports = {
   addRoom,
   updateRoom,
   deleteRoom,
-  assignRoom, // ✅ new export
+  assignRoom,
 };
