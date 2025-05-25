@@ -1,5 +1,5 @@
 // src/App.js
-import React, { useContext } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -15,24 +15,31 @@ import BillList from './components/BillList';
 import CreateBill from './components/CreateBill';
 import EditBill from './components/EditBill';
 import AdminPage from './pages/AdminPage';
-import { AuthContext } from './context/AuthContext';
+import AdminDashboard from './pages/AdminDashboard'; // ✅ NEW
 import Navbar from './components/Navbar';
 import ErrorFallback from './components/ErrorFallback';
+import { useAuth } from './context/AuthContext';
+
+const Forbidden = () => (
+  <div className="p-10 text-center">
+    <h1 className="text-3xl font-bold text-red-600">403 - Forbidden</h1>
+    <p className="mt-4 text-gray-600">You do not have permission to access this page.</p>
+  </div>
+);
+
+const NotFound = () => (
+  <div className="p-10 text-center">
+    <h1 className="text-3xl font-bold text-red-600">404 - Page Not Found</h1>
+    <p className="mt-4 text-gray-600">The requested page does not exist.</p>
+  </div>
+);
 
 const ProtectedRoute = ({ children, role }) => {
-  const { user, loading } = useContext(AuthContext);
+  const { user, loading } = useAuth();
 
-  if (loading) return null; // Or return a spinner/loading indicator if desired
-
+  if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  if (role && user.role !== role) {
-    return (
-      <div className="p-10 text-center">
-        <h1 className="text-3xl font-bold text-red-600">403 - Forbidden</h1>
-        <p className="mt-4 text-gray-600">You do not have permission to access this page.</p>
-      </div>
-    );
-  }
+  if (role && user?.role !== role) return <Forbidden />;
 
   return children;
 };
@@ -51,12 +58,10 @@ const App = () => (
     <Toaster position="top-right" />
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <Routes>
-        {/* Public routes */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Protected Dashboard Routes */}
         <Route
           path="/dashboard"
           element={
@@ -74,8 +79,6 @@ const App = () => (
           <Route path="bills" element={<BillList />} />
           <Route path="bills/new" element={<CreateBill />} />
           <Route path="bills/edit/:id" element={<EditBill />} />
-
-          {/* Admin-only route */}
           <Route
             path="admin-only"
             element={
@@ -84,26 +87,18 @@ const App = () => (
               </ProtectedRoute>
             }
           />
-
-          {/* Nested 404 within dashboard */}
           <Route
-            path="*"
+            path="admin-dashboard"
             element={
-              <div className="p-10 text-center">
-                <h1 className="text-3xl font-bold text-red-600">404 - Page Not Found</h1>
-                <p className="mt-4 text-gray-600">The requested page does not exist.</p>
-              </div>
+              <ProtectedRoute role="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
             }
           />
+          <Route path="*" element={<NotFound />} />
         </Route>
 
-        {/* Global 404 */}
-        <Route
-          path="*"
-          element={
-            <h1 className="text-center mt-10 text-3xl font-bold text-red-600">404 - Page Not Found</h1>
-          }
-        />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </ErrorBoundary>
   </Router>

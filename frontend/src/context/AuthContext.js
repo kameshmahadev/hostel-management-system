@@ -1,11 +1,12 @@
 // src/context/AuthContext.js
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
-export const AuthContext = createContext();
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // 🆕 loading flag
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -17,7 +18,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Invalid user data in localStorage:', err);
       localStorage.removeItem('user');
     } finally {
-      setLoading(false); // ✅ Finished loading
+      setLoading(false);
     }
   }, []);
 
@@ -29,9 +30,26 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
+  const login = (user, token) => {
+    localStorage.setItem('token', token);
+    setUser(user);
+    toast.success(`Welcome back, ${user.name || 'User'}! 👋`);
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    toast.success('Logged out successfully 👋');
+  };
+
+  const isAdmin = user?.role === 'admin';
+
   return (
-    <AuthContext.Provider value={{ user, setUser, loading }}>
+    <AuthContext.Provider value={{ user, setUser, loading, login, logout, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = () => useContext(AuthContext);

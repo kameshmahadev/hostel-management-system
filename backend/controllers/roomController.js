@@ -141,4 +141,40 @@ const deleteRoom = async (req, res, next) => {
   }
 };
 
-module.exports = { getRooms, getRoomById, addRoom, updateRoom, deleteRoom };
+// ✅ Assign a room to a resident
+const assignRoom = async (req, res, next) => {
+  try {
+    const { id } = req.params; // Room ID
+    const { userId } = req.body; // Resident ID
+
+    const room = await Room.findById(id);
+    if (!room) throw new AppError('Room not found', 404);
+
+    if (room.status === 'Occupied') {
+      throw new AppError('Room is already occupied', 400);
+    }
+
+    const user = await User.findById(userId);
+    if (!user) throw new AppError('User (Resident) not found', 404);
+
+    room.currentResident = userId;
+    room.status = 'Occupied';
+    room.checkInDate = new Date();
+    room.checkOutDate = null;
+
+    const updatedRoom = await room.save();
+
+    res.status(200).json({ message: 'Room assigned successfully', room: updatedRoom });
+  } catch (error) {
+    next(new AppError('Error assigning room', 500, error.message));
+  }
+};
+
+module.exports = {
+  getRooms,
+  getRoomById,
+  addRoom,
+  updateRoom,
+  deleteRoom,
+  assignRoom, // ✅ new export
+};

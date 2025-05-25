@@ -1,8 +1,8 @@
-// components/RoomsList.js
 import React, { useEffect, useState, useContext } from 'react';
-import api from '../service/api'; // Adjust the path if needed
+import api from '../service/api';
 import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const RoomsList = () => {
   const [rooms, setRooms] = useState([]);
@@ -29,14 +29,15 @@ const RoomsList = () => {
     if (!window.confirm('Are you sure you want to delete this room?')) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/rooms/${id}`, {
+      await api.delete(`http://localhost:5000/api/rooms/${id}`, {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
       });
       setRooms((prev) => prev.filter((room) => room._id !== id));
+      toast.success('Room deleted successfully');
     } catch (err) {
-      toast.success('Delete failed');
+      toast.error('Delete failed');
     }
   };
 
@@ -69,7 +70,7 @@ const RoomsList = () => {
               <td className="p-2 border">{room.number}</td>
               <td className="p-2 border">{room.type}</td>
               <td className="p-2 border">{room.capacity}</td>
-              <td className="p-2 border">{room.occupied ? 'Occupied' : 'Available'}</td>
+              <td className="p-2 border">{room.status}</td>
               {user.role !== 'resident' && (
                 <td className="p-2 border space-x-2">
                   <button

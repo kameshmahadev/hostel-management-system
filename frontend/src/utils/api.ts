@@ -1,13 +1,13 @@
 import axios from "axios";
 import toast from "react-hot-toast";
 
-// ✅ Create a central API instance
+// ✅ Central Axios instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
   withCredentials: true,
 });
 
-// ✅ Request Interceptor — Add token
+// ✅ Request Interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -19,8 +19,8 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ✅ Friendly error message mapper
-export function getFriendlyErrorMessage(error: any): string {
+// ✅ Friendly Error Message Mapper
+export function getFriendlyErrorMessage(error) {
   const status = error.response?.status;
   const msg = error.response?.data?.message;
 
@@ -44,18 +44,18 @@ export function getFriendlyErrorMessage(error: any): string {
   }
 }
 
-// ✅ Response Interceptor — Global error handling
+// ✅ Response Interceptor
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
-
     const message = getFriendlyErrorMessage(error);
+
     toast.error(message);
 
-    // Redirect on 401
     if (status === 401) {
       localStorage.removeItem("token");
+      localStorage.removeItem("user");
       window.location.href = "/login";
     }
 

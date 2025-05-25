@@ -1,11 +1,14 @@
+// src/service/api.js
+
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+// ✅ Use CRA-compatible env variable
 const instance = axios.create({
-  baseURL: 'http://localhost:5000/api', // Adjust as per your backend
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
 });
 
-// Request interceptor
+// ✅ Automatically attach token to headers
 instance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -17,7 +20,7 @@ instance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor
+// ✅ Global error handling
 instance.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -29,7 +32,7 @@ instance.interceptors.response.use(
     if (status === 401 || status === 403) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login'; // force redirect
+      window.location.href = '/login';
     }
 
     return Promise.reject(error);
