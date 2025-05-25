@@ -1,39 +1,39 @@
-// src/service/api.js
 import axios from 'axios';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
-const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+const instance = axios.create({
+  baseURL: 'http://localhost:5000/api', // Adjust as per your backend
 });
 
-// Add token to headers if it exists
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+// Request interceptor
+instance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-// Show toast errors globally & handle 401 redirects
-api.interceptors.response.use(
+// Response interceptor
+instance.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
-    const message = error.response?.data?.message || error.message || 'Something went wrong';
+    const message = error.response?.data?.message || 'Something went wrong';
 
-    if (status === 401) {
-      toast.error('Session expired. Please login again.');
-      // Redirect to login page (hard redirect)
-      window.location.href = '/login';
-    } else if (status === 500) {
-      toast.error('Server error. Please try again later.');
-    } else if (status) {
-      toast.error(message);
-    } else {
-      toast.error('Network error. Please check your connection.');
+    toast.error(message);
+
+    if (status === 401 || status === 403) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login'; // force redirect
     }
 
     return Promise.reject(error);
   }
 );
 
-export default api;
+export default instance;

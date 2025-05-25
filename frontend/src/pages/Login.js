@@ -29,7 +29,7 @@ const Login = () => {
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
       toast.success("Login successful!");
-      navigate("/dashboard");
+      navigate("/dashboard/home");
     } catch (error) {
       const message = error.response?.data?.message || "Login failed";
       toast.error(message);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
-import api from '../service/api'; // Your centralized axios instance
+import api from '../service/api';
 import { AuthContext } from '../context/AuthContext';
 import AddRoomForm from '../components/AddRoomForm';
 import { toast } from 'react-hot-toast';
@@ -8,18 +8,20 @@ const Rooms = () => {
   const [rooms, setRooms] = useState([]);
   const { user } = useContext(AuthContext);
   const [showAddRoomForm, setShowAddRoomForm] = useState(false);
+  const [error, setError] = useState(null);
 
   const fetchRooms = useCallback(async () => {
     try {
-      const res = await api.get('/rooms', {
-        headers: { Authorization: `Bearer ${user.token}` },
-      });
+      setError(null);
+      const res = await api.get('/rooms');
       setRooms(res.data);
     } catch (err) {
-      console.error('Failed to fetch rooms:', err.response?.data?.message || err.message);
+      const msg = err.response?.data?.message || err.message;
+      setError(msg);
       toast.error('Failed to load rooms. Please try again.');
+      console.error('Fetch rooms error:', msg);
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     if (user?.token) {
@@ -29,16 +31,14 @@ const Rooms = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this room?')) return;
-
     try {
-      await api.delete(`/rooms/${id}`, {
-        headers: { Authorization: `Bearer ${user.token}` },
-      });
+      await api.delete(`/rooms/${id}`);
       toast.success('Room deleted successfully!');
       fetchRooms();
     } catch (err) {
-      console.error('Delete failed:', err.response?.data?.message || err.message);
-      toast.error('Delete failed. ' + (err.response?.data?.message || 'Please try again.'));
+      const msg = err.response?.data?.message || err.message;
+      toast.error(`Delete failed: ${msg}`);
+      console.error('Delete failed:', msg);
     }
   };
 
@@ -65,7 +65,18 @@ const Rooms = () => {
 
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h3 className="text-xl font-semibold mb-4 text-gray-700">All Rooms</h3>
-        {rooms.length === 0 ? (
+
+        {error ? (
+          <div className="text-red-600 mb-4">
+            <p>{error}</p>
+            <button
+              onClick={fetchRooms}
+              className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Retry
+            </button>
+          </div>
+        ) : rooms.length === 0 ? (
           <p className="text-gray-600">No rooms found. Add a new room to get started.</p>
         ) : (
           <div className="overflow-x-auto">

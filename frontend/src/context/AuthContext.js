@@ -6,7 +6,13 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem('user');
-    return storedUser ? JSON.parse(storedUser) : null;
+    try {
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch (err) {
+      console.error('Invalid user data in localStorage:', err);
+      localStorage.removeItem('user');
+      return null;
+    }
   });
 
   useEffect(() => {
