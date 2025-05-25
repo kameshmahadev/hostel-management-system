@@ -4,16 +4,22 @@ import { createContext, useState, useEffect } from 'react';
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // 🆕 loading flag
+
+  useEffect(() => {
     const storedUser = localStorage.getItem('user');
     try {
-      return storedUser ? JSON.parse(storedUser) : null;
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
     } catch (err) {
       console.error('Invalid user data in localStorage:', err);
       localStorage.removeItem('user');
-      return null;
+    } finally {
+      setLoading(false); // ✅ Finished loading
     }
-  });
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -24,7 +30,7 @@ export const AuthProvider = ({ children }) => {
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, setUser }}>
+    <AuthContext.Provider value={{ user, setUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

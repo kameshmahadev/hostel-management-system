@@ -1,3 +1,4 @@
+// src/App.js
 import React, { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -19,7 +20,9 @@ import Navbar from './components/Navbar';
 import ErrorFallback from './components/ErrorFallback';
 
 const ProtectedRoute = ({ children, role }) => {
-  const { user } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);
+
+  if (loading) return null; // Or return a spinner/loading indicator if desired
 
   if (!user) return <Navigate to="/login" replace />;
   if (role && user.role !== role) {

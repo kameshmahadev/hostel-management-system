@@ -1,13 +1,23 @@
-import React from "react";
+// src/pages/Login.js
+import React, { useContext, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import axios from "../service/api";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { AuthContext } from "../context/AuthContext"; // ✅ Import AuthContext
 
 const Login = () => {
   const navigate = useNavigate();
+  const { user, setUser } = useContext(AuthContext); // ✅ Get user and setUser
+
+  // ✅ Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard/home");
+    }
+  }, [user, navigate]);
 
   const validationSchema = Yup.object().shape({
     email: Yup.string().required("Email is required").email("Invalid email"),
@@ -24,11 +34,16 @@ const Login = () => {
 
   const onSubmit = async (data) => {
     try {
-      const response = await axios.post("/auth/login", data); // ✅ corrected path
+      const response = await axios.post("/auth/login", data);
       const { token, user } = response.data;
+
+      if (!token || !user) throw new Error("Invalid login response");
+
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
+      setUser(user); // ✅ Update context state
       toast.success("Login successful!");
+
       navigate("/dashboard/home");
     } catch (error) {
       const message = error.response?.data?.message || "Login failed";
