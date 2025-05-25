@@ -29,7 +29,6 @@ const Rooms = () => {
   }, []);
 
   useEffect(() => {
-    // Check token in localStorage instead of user.token
     if (localStorage.getItem('token')) {
       fetchRooms();
     }
@@ -75,7 +74,9 @@ const Rooms = () => {
       <div className="bg-white p-4 rounded shadow">
         <h3 className="text-xl font-semibold mb-4">Rooms</h3>
         {loading ? (
-          <p>Loading...</p>
+          <div className="flex justify-center items-center py-10">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-4 border-blue-500"></div>
+          </div>
         ) : error ? (
           <div className="text-red-600">
             <p>{error}</p>
