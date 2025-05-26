@@ -1,4 +1,3 @@
-// src/context/AuthContext.js
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -6,17 +5,24 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token');
+
     try {
       if (storedUser) {
         setUser(JSON.parse(storedUser));
       }
+      if (storedToken) {
+        setToken(storedToken);
+      }
     } catch (err) {
       console.error('Invalid user data in localStorage:', err);
       localStorage.removeItem('user');
+      localStorage.removeItem('token');
     } finally {
       setLoading(false);
     }
@@ -30,23 +36,30 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem('token', token);
+    } else {
+      localStorage.removeItem('token');
+    }
+  }, [token]);
+
   const login = (user, token) => {
-    localStorage.setItem('token', token);
     setUser(user);
+    setToken(token);
     toast.success(`Welcome back, ${user.name || 'User'}! 👋`);
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
     setUser(null);
+    setToken(null);
     toast.success('Logged out successfully 👋');
   };
 
   const isAdmin = user?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, login, logout, isAdmin }}>
+    <AuthContext.Provider value={{ user, token, setUser, setToken, loading, login, logout, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

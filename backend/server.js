@@ -13,6 +13,7 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const userRoutes = require('./routes/userRoutes');
 const billRoutes = require('./routes/billRoutes');
 const maintenanceRoutes = require('./routes/maintenanceRoutes');
+const residentRoutes = require('./routes/residentRoutes');
 
 const AppError = require('./utils/AppError');      // Your custom error class
 const errorHandler = require('./middleware/ErrorHandler'); // Your global error handler middleware
@@ -31,6 +32,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/bills', billRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/residents', residentRoutes);
 
 // Root Route - Your simple homepage for the API
 app.get('/', (req, res) => {

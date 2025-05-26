@@ -9,16 +9,19 @@ import Login from './pages/Login';
 import DashboardHome from './pages/DashboardHome';
 import Rooms from './pages/Rooms';
 import Bookings from './pages/Bookings';
-import Maintenance from './pages/Maintenance';
 import Billing from './pages/Billing';
 import BillList from './components/BillList';
 import CreateBill from './components/CreateBill';
 import EditBill from './components/EditBill';
 import AdminPage from './pages/AdminPage';
-import AdminDashboard from './pages/AdminDashboard'; // ✅ NEW
+import AdminDashboard from './pages/AdminDashboard';
 import Navbar from './components/Navbar';
 import ErrorFallback from './components/ErrorFallback';
 import { useAuth } from './context/AuthContext';
+import BookRoom from './pages/booking/BookRoom';
+import BookingHistory from './pages/booking/BookingHistory';
+import CreateMaintenance from './pages/maintenance/CreateMaintenance';
+import MyMaintenanceRequests from './pages/maintenance/MyMaintenanceRequests';
 
 const Forbidden = () => (
   <div className="p-10 text-center">
@@ -74,11 +77,18 @@ const App = () => (
           <Route path="home" element={<DashboardHome />} />
           <Route path="rooms" element={<Rooms />} />
           <Route path="bookings" element={<Bookings />} />
-          <Route path="maintenance" element={<Maintenance />} />
+          <Route path="book-room" element={<BookRoom />} />
+          <Route path="my-bookings" element={<BookingHistory />} />
+
+          {/* ✅ Maintenance Routes */}
+          <Route path="maintenance" element={<MyMaintenanceRequests />} />
+          <Route path="maintenance/new" element={<CreateMaintenance />} />
+
           <Route path="billing" element={<Billing />} />
           <Route path="bills" element={<BillList />} />
           <Route path="bills/new" element={<CreateBill />} />
           <Route path="bills/edit/:id" element={<EditBill />} />
+
           <Route
             path="admin-only"
             element={
@@ -95,6 +105,7 @@ const App = () => (
               </ProtectedRoute>
             }
           />
+
           <Route path="*" element={<NotFound />} />
         </Route>
 
