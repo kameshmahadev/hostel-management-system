@@ -19,6 +19,7 @@ const RoomsList = () => {
         setRooms(res.data);
       } catch (err) {
         console.error('Failed to fetch rooms:', err);
+        toast.error('Error fetching rooms');
       }
     };
 
@@ -42,49 +43,62 @@ const RoomsList = () => {
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Room List</h2>
+    <div className="p-4">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+        <h2 className="text-2xl font-bold">Room List</h2>
         {user.role !== 'resident' && (
           <Link
             to="/add-room"
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
           >
             + Add Room
           </Link>
         )}
       </div>
-      <table className="w-full border shadow">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-2 border">Room No</th>
-            <th className="p-2 border">Type</th>
-            <th className="p-2 border">Capacity</th>
-            <th className="p-2 border">Status</th>
-            {user.role !== 'resident' && <th className="p-2 border">Actions</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {rooms.map((room) => (
-            <tr key={room._id}>
-              <td className="p-2 border">{room.number}</td>
-              <td className="p-2 border">{room.type}</td>
-              <td className="p-2 border">{room.capacity}</td>
-              <td className="p-2 border">{room.status}</td>
-              {user.role !== 'resident' && (
-                <td className="p-2 border space-x-2">
-                  <button
-                    onClick={() => handleDelete(room._id)}
-                    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                  >
-                    Delete
-                  </button>
-                </td>
-              )}
+
+      {/* Responsive Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[600px] border border-gray-200 shadow-sm">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-3 border text-left">Room No</th>
+              <th className="p-3 border text-left">Type</th>
+              <th className="p-3 border text-left">Capacity</th>
+              <th className="p-3 border text-left">Status</th>
+              {user.role !== 'resident' && <th className="p-3 border text-left">Actions</th>}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rooms.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="text-center p-4">
+                  No rooms found.
+                </td>
+              </tr>
+            ) : (
+              rooms.map((room) => (
+                <tr key={room._id} className="hover:bg-gray-50">
+                  <td className="p-3 border">{room.number}</td>
+                  <td className="p-3 border">{room.type}</td>
+                  <td className="p-3 border">{room.capacity}</td>
+                  <td className="p-3 border">{room.status}</td>
+                  {user.role !== 'resident' && (
+                    <td className="p-3 border">
+                      <button
+                        onClick={() => handleDelete(room._id)}
+                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

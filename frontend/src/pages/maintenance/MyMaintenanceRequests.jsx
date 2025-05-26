@@ -31,31 +31,27 @@ const MyMaintenanceRequests = () => {
     }
   }, [user]);
 
-  if (!user) return <p>User is not authenticated</p>;
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>{error}</p>;
+  if (!user) return <p className="text-center text-red-500">User is not authenticated</p>;
+  if (loading) return <p className="text-center text-gray-500">Loading...</p>;
+  if (error) return <p className="text-center text-red-500">{error}</p>;
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">My Maintenance Requests</h2>
+    <div className="p-4">
+      <h2 className="text-2xl font-bold mb-6 text-center">My Maintenance Requests</h2>
+      
       {requests.length === 0 ? (
-        <p>No maintenance requests found.</p>
+        <p className="text-center text-gray-500">No maintenance requests found.</p>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {requests.map((req) => (
             <div
               key={req._id}
-              style={{
-                border: '1px solid #ddd',
-                borderRadius: '10px',
-                padding: '1rem',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-              }}
+              className="bg-white rounded-2xl shadow-md p-4 border border-gray-200 hover:shadow-lg transition duration-300"
             >
-              <h3 className="text-lg font-semibold">{req.title}</h3>
-              <p className="text-sm text-gray-600">{req.description}</p>
-              <p className="text-sm mt-1">
-                <strong>Status:</strong> {req.status}
+              <h3 className="text-lg font-semibold mb-1">{req.title}</h3>
+              <p className="text-sm text-gray-600 mb-2 break-words">{req.description}</p>
+              <p className="text-sm mb-1">
+                <span className="font-medium">Status:</span> {req.status}
               </p>
               <p className="text-sm text-gray-500">
                 Submitted on: {new Date(req.createdAt).toLocaleDateString()}
