@@ -2,7 +2,7 @@ const Room = require('../models/Room');
 const User = require('../models/User');
 const AppError = require('../utils/AppError');
 
-// Fetch all rooms
+// Get all rooms
 const getRooms = async (req, res, next) => {
   try {
     const rooms = await Room.find().populate('assignedResident', 'name email');
@@ -12,21 +12,19 @@ const getRooms = async (req, res, next) => {
   }
 };
 
-// Fetch a single room by ID
+// Get single room
 const getRoomById = async (req, res, next) => {
   try {
     const room = await Room.findById(req.params.id).populate('assignedResident', 'name email');
-    if (!room) throw new AppError('Room not found', 404);
+    if (!room) return next(new AppError('Room not found', 404));
     res.status(200).json(room);
   } catch (error) {
-    if (error.kind === 'ObjectId') {
-      return next(new AppError('Invalid Room ID format', 400));
-    }
+    if (error.kind === 'ObjectId') return next(new AppError('Invalid Room ID format', 400));
     next(new AppError('Error fetching room', 500, error.message));
   }
 };
 
-// Add a new room
+// Add room
 const addRoom = async (req, res, next) => {
   try {
     const { number, type, capacity, price, occupied } = req.body;
@@ -35,34 +33,25 @@ const addRoom = async (req, res, next) => {
       throw new AppError('All required fields (number, type, capacity, price) are missing.', 400);
     }
 
-    if (isNaN(capacity) || capacity < 1) {
-      throw new AppError('Capacity must be a positive number.', 400);
-    }
-
-    if (isNaN(price) || price < 0) {
-      throw new AppError('Price must be a non-negative number.', 400);
-    }
+    if (isNaN(capacity) || capacity < 1) throw new AppError('Capacity must be a positive number.', 400);
+    if (isNaN(price) || price < 0) throw new AppError('Price must be a non-negative number.', 400);
 
     const existingRoom = await Room.findOne({ number });
-    if (existingRoom) {
-      throw new AppError(`Room number ${number} already exists.`, 400);
-    }
+    if (existingRoom) throw new AppError(`Room number ${number} already exists.`, 400);
 
-    let initialStatus = occupied === true ? 'Occupied' : 'Available';
-
-    const newRoom = new Room({
+    const room = new Room({
       number,
       type,
       capacity,
       price,
-      status: initialStatus,
+      status: occupied ? 'Occupied' : 'Available',
     });
 
-    const savedRoom = await newRoom.save();
+    const savedRoom = await room.save();
     res.status(201).json({ message: 'Room added successfully', room: savedRoom });
   } catch (error) {
     if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map(val => val.message).join(', ');
+      const messages = Object.values(error.errors).map((val) => val.message).join(', ');
       return next(new AppError(messages, 400));
     }
     if (error.code === 11000) {
@@ -72,7 +61,7 @@ const addRoom = async (req, res, next) => {
   }
 };
 
-// Update room details
+// Update room
 const updateRoom = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -90,31 +79,29 @@ const updateRoom = async (req, res, next) => {
       throw new AppError('Invalid room status.', 400);
     }
 
-    const roomUpdates = { type, capacity, price, status };
+    const updates = { type, capacity, price, status };
 
     if (assignedResident !== undefined) {
       if (assignedResident === null) {
-        roomUpdates.assignedResident = null;
-        roomUpdates.status = 'Available';
-        roomUpdates.checkOutDate = new Date();
+        updates.assignedResident = null;
+        updates.status = 'Available';
+        updates.checkOutDate = new Date();
       } else {
-        const residentExists = await User.findById(assignedResident);
-        if (!residentExists) {
-          throw new AppError('Resident not found.', 400);
-        }
-        roomUpdates.assignedResident = assignedResident;
-        roomUpdates.status = 'Occupied';
-        roomUpdates.checkInDate = new Date();
-        roomUpdates.checkOutDate = null;
+        const resident = await User.findById(assignedResident);
+        if (!resident) throw new AppError('Resident not found.', 400);
+        updates.assignedResident = assignedResident;
+        updates.status = 'Occupied';
+        updates.checkInDate = new Date();
+        updates.checkOutDate = null;
       }
     }
 
-    if (checkInDate) roomUpdates.checkInDate = new Date(checkInDate);
-    if (checkOutDate) roomUpdates.checkOutDate = new Date(checkOutDate);
+    if (checkInDate) updates.checkInDate = new Date(checkInDate);
+    if (checkOutDate) updates.checkOutDate = new Date(checkOutDate);
 
-    const updatedRoom = await Room.findByIdAndUpdate(id, roomUpdates, {
+    const updatedRoom = await Room.findByIdAndUpdate(id, updates, {
       new: true,
-      runValidators: true
+      runValidators: true,
     }).populate('assignedResident', 'name email');
 
     if (!updatedRoom) throw new AppError('Room not found', 404);
@@ -122,18 +109,17 @@ const updateRoom = async (req, res, next) => {
     res.status(200).json({ message: 'Room updated successfully', room: updatedRoom });
   } catch (error) {
     if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map(val => val.message).join(', ');
+      const messages = Object.values(error.errors).map((val) => val.message).join(', ');
       return next(new AppError(messages, 400));
     }
     next(new AppError('Error updating room', 500, error.message));
   }
 };
 
-// Delete a room
+// Delete room
 const deleteRoom = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const deletedRoom = await Room.findByIdAndDelete(id);
+    const deletedRoom = await Room.findByIdAndDelete(req.params.id);
     if (!deletedRoom) throw new AppError('Room not found', 404);
     res.status(200).json({ message: 'Room deleted successfully' });
   } catch (error) {
@@ -141,11 +127,11 @@ const deleteRoom = async (req, res, next) => {
   }
 };
 
-// Assign a room to a resident
+// Assign room
 const assignRoom = async (req, res, next) => {
   try {
-    const { id } = req.params; // Room ID
-    const { userId } = req.body; // Resident ID
+    const { id } = req.params;
+    const { residentId } = req.body;
 
     const room = await Room.findById(id);
     if (!room) throw new AppError('Room not found', 404);
@@ -154,16 +140,15 @@ const assignRoom = async (req, res, next) => {
       throw new AppError('Room is already occupied', 400);
     }
 
-    const user = await User.findById(userId);
-    if (!user) throw new AppError('User (Resident) not found', 404);
+    const resident = await User.findById(residentId);
+    if (!resident) throw new AppError('Resident not found', 404);
 
-    room.assignedResident = userId;
+    room.assignedResident = residentId;
     room.status = 'Occupied';
     room.checkInDate = new Date();
     room.checkOutDate = null;
 
     const updatedRoom = await room.save();
-
     res.status(200).json({ message: 'Room assigned successfully', room: updatedRoom });
   } catch (error) {
     next(new AppError('Error assigning room', 500, error.message));
