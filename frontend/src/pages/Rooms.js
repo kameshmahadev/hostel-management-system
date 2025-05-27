@@ -1,4 +1,3 @@
-// src/pages/Rooms.js
 import React, { useEffect, useState, useCallback } from 'react';
 import api from '../service/api';
 import { useAuth } from '../context/AuthContext';
@@ -16,7 +15,12 @@ const Rooms = () => {
   const fetchRooms = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await api.get('/rooms');
+      const token = localStorage.getItem('token');
+      const res = await api.get('/rooms', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setRooms(res.data);
       setError(null);
     } catch (err) {
@@ -38,7 +42,12 @@ const Rooms = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this room?')) return;
     try {
-      await api.delete(`/rooms/${id}`);
+      const token = localStorage.getItem('token');
+      await api.delete(`/rooms/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       toast.success('Room deleted.');
       fetchRooms();
     } catch (err) {
@@ -47,9 +56,9 @@ const Rooms = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold">Room Management</h2>
+    <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold">Room Management</h2>
         {user?.role !== 'resident' && (
           <button
             onClick={() => setShowAddRoomForm(!showAddRoomForm)}
@@ -71,8 +80,9 @@ const Rooms = () => {
         </div>
       )}
 
-      <div className="bg-white p-4 rounded shadow">
+      <div className="bg-white p-4 rounded shadow overflow-x-auto">
         <h3 className="text-xl font-semibold mb-4">Rooms</h3>
+
         {loading ? (
           <div className="flex justify-center items-center py-10">
             <div className="animate-spin rounded-full h-8 w-8 border-t-4 border-blue-500"></div>
@@ -90,8 +100,8 @@ const Rooms = () => {
         ) : rooms.length === 0 ? (
           <p className="text-gray-500">No rooms available.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border border-gray-300">
+          <div className="min-w-full">
+            <table className="w-full border border-gray-300 text-sm sm:text-base">
               <thead className="bg-gray-100">
                 <tr>
                   <th className="p-2 border">Room No</th>
@@ -99,7 +109,8 @@ const Rooms = () => {
                   <th className="p-2 border">Capacity</th>
                   <th className="p-2 border">Price</th>
                   <th className="p-2 border">Status</th>
-                  {user.role !== 'resident' && <th className="p-2 border">Actions</th>}
+                  <th className="p-2 border">Assigned To</th>
+                  {user?.role !== 'resident' && <th className="p-2 border">Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -123,7 +134,10 @@ const Rooms = () => {
                         {room.status}
                       </span>
                     </td>
-                    {user.role !== 'resident' && (
+                    <td className="p-2 border">
+                      {room.assignedResident ? `${room.assignedResident.name} (${room.assignedResident.email})` : '—'}
+                    </td>
+                    {user?.role !== 'resident' && (
                       <td className="p-2 border">
                         <button
                           onClick={() => handleDelete(room._id)}

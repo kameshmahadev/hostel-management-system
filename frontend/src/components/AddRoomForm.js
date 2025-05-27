@@ -34,13 +34,22 @@ const AddRoomForm = ({ onRoomAdded }) => {
     }
 
     try {
-      await api.post('/rooms', {
-        number,
-        type,
-        price: parseFloat(price),
-        capacity: parseInt(capacity),
-        status: occupied ? 'Occupied' : 'Available',
-      });
+      const token = localStorage.getItem('token');
+      await api.post(
+        '/rooms',
+        {
+          number,
+          type,
+          price: parseFloat(price),
+          capacity: parseInt(capacity),
+          status: occupied ? 'Occupied' : 'Available',
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       toast.success('Room added successfully!');
       setFormData({
         number: '',

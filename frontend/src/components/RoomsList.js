@@ -1,21 +1,22 @@
-import React, { useEffect, useState, useContext } from 'react';
+// src/components/RoomsList.js
+import React, { useEffect, useState } from 'react';
 import api from '../service/api';
-import { AuthContext } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Spinner } from './Spinner'; // Assume you have a Spinner component
+import { Spinner } from './Spinner'; // Ensure this exists
 
 const RoomsList = () => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchRooms = async () => {
       try {
         const res = await api.get('/api/rooms', {
-          headers: { Authorization: `Bearer ${user.token}` },
+          headers: { Authorization: `Bearer ${user?.token}` },
         });
         setRooms(res.data);
       } catch (err) {
@@ -35,7 +36,7 @@ const RoomsList = () => {
 
     try {
       await api.delete(`/api/rooms/${id}`, {
-        headers: { Authorization: `Bearer ${user.token}` },
+        headers: { Authorization: `Bearer ${user?.token}` },
       });
       setRooms((prev) => prev.filter((room) => room._id !== id));
       toast.success('Room deleted successfully');
@@ -51,7 +52,7 @@ const RoomsList = () => {
     <div className="p-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <h2 className="text-2xl font-bold">Room List</h2>
-        {user.role !== 'resident' && (
+        {user?.role !== 'resident' && (
           <Link
             to="/add-room"
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition whitespace-nowrap"
@@ -64,7 +65,7 @@ const RoomsList = () => {
       {rooms.length === 0 ? (
         <div className="bg-white p-8 rounded-lg shadow text-center">
           <p className="text-gray-500 text-lg">No rooms found</p>
-          {user.role !== 'resident' && (
+          {user?.role !== 'resident' && (
             <Link
               to="/add-room"
               className="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
@@ -82,7 +83,7 @@ const RoomsList = () => {
                 <th className="p-3 text-left text-sm font-semibold text-gray-700">Type</th>
                 <th className="p-3 text-left text-sm font-semibold text-gray-700">Capacity</th>
                 <th className="p-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                {user.role !== 'resident' && (
+                {user?.role !== 'resident' && (
                   <th className="p-3 text-left text-sm font-semibold text-gray-700">Actions</th>
                 )}
               </tr>
@@ -94,15 +95,19 @@ const RoomsList = () => {
                   <td className="p-3 whitespace-nowrap">{room.type}</td>
                   <td className="p-3 whitespace-nowrap">{room.capacity}</td>
                   <td className="p-3 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      room.status === 'Available' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 text-xs rounded-full ${
+                        room.status === 'Available'
+                          ? 'bg-green-100 text-green-800'
+                          : room.status === 'Occupied'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}
+                    >
                       {room.status}
                     </span>
                   </td>
-                  {user.role !== 'resident' && (
+                  {user?.role !== 'resident' && (
                     <td className="p-3 whitespace-nowrap space-x-2">
                       <Link
                         to={`/edit-room/${room._id}`}

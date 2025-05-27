@@ -1,7 +1,6 @@
+// routes/roomRoutes.js
 const express = require('express');
 const router = express.Router();
-const { protect, authorizeRoles } = require('../middleware/authMiddleware');
-
 const {
   getRooms,
   getRoomById,
@@ -9,18 +8,18 @@ const {
   updateRoom,
   deleteRoom,
 } = require('../controllers/roomController');
-
+const { protect, authorizeRoles } = require('../middleware/authMiddleware');
 const Room = require('../models/Room');
 const User = require('../models/User');
 
-// Routes
+// Room Routes
 router.get('/', protect, getRooms);
 router.post('/', protect, authorizeRoles('admin', 'staff'), addRoom);
 router.get('/:id', protect, getRoomById);
 router.put('/:id', protect, authorizeRoles('admin', 'staff'), updateRoom);
 router.delete('/:id', protect, authorizeRoles('admin', 'staff'), deleteRoom);
 
-// Room Assignment Route
+// Assign Room Route
 router.post('/:id/assign', protect, authorizeRoles('admin', 'staff'), async (req, res) => {
   const { residentId } = req.body;
 
