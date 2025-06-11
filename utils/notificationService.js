@@ -1,10 +1,29 @@
 // Notification service for sending emails/SMS/in-app alerts
 // You can integrate with SendGrid, Twilio, or nodemailer here
+const nodemailer = require('nodemailer');
+require('dotenv').config();
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 module.exports = {
   sendEmail: async (to, subject, message) => {
-    // TODO: Integrate with email provider
-    console.log(`Sending email to ${to}: ${subject} - ${message}`);
+    try {
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to,
+        subject,
+        text: message,
+      });
+      console.log(`Email sent to ${to}`);
+    } catch (err) {
+      console.error('Email send error:', err.message);
+    }
   },
   sendSMS: async (to, message) => {
     // TODO: Integrate with SMS provider
